@@ -1,0 +1,225 @@
+defaultTasks 'clean', 'deploy'
+
+//apply plugin:'java'
+apply plugin: 'groovy'
+apply plugin:'eclipse'
+apply plugin:'maven'
+apply plugin: 'idea'
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+println properties["systemProp.http.proxyHost"]
+def baseName = properties["project.name"]
+if(baseName == null || baseName.trim().equals("")){
+	baseName = project.name.split("[^a-zA-Z0-9]")[0]
+}
+println baseName
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+sourceSets {
+	main {
+		java{
+			srcDirs = []
+		}
+        groovy {
+            //srcDir 'src/main/java'
+			srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }    
+}
+
+configurations {
+    compile {
+        description = 'compile classpath'
+        transitive = true
+    }
+    runtime {
+        extendsFrom compile
+    }
+
+	all*.exclude module: 'jcl104-over-slf4j'
+	
+	removeOnBuildEclipse
+}
+
+repositories {
+	//maven{
+	//	url 'http://nexus.s01.kdc/content/groups/public/'
+	//}
+    mavenCentral()
+}
+	
+dependencies {
+	compile group: 'ch.qos.logback', name: 'logback-classic', version: '+'
+	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta0'
+	compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.8.0-beta0'
+	compile 'org.springframework:spring-context:+'
+	compile group: 'org.springframework', name: 'spring-context-support', version: '+'
+	
+	compile 'org.json:json:+'
+	compile 'org.noggit:noggit:+'
+	compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.2'
+	compile group: 'junit', name: 'junit', version: '+'
+	
+	compile 'commons-dbcp:commons-dbcp:+'
+	compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.8-dmr'
+	compile 'org.xerial:sqlite-jdbc:+'
+	compile group: 'org.mybatis', name: 'mybatis-spring', version: '+'
+	compile group: 'org.mybatis', name: 'mybatis-typehandlers-jsr310', version: '+'
+	
+	compile 'org.mybatis:mybatis:+'
+	compile 'org.springframework:spring-jdbc:+'
+    //compile 'org.apache.httpcomponents:httpclient:+'
+	//compile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '+'
+	
+	compile group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '+'
+	compile group: 'org.apache.httpcomponents.client5', name: 'httpclient5-fluent', version: '+'
+	
+	
+    compile 'org.jsoup:jsoup:+'
+	
+	compile group: 'org.aspectj', name: 'aspectjrt', version: '+'
+	compile group: 'org.aspectj', name: 'aspectjweaver', version: '+'
+	compile 'javax.mail:mail:+'
+	compile 'org.apache.velocity:velocity:+'
+	
+	// https://mvnrepository.com/artifact/org.apache.ant/ant
+	compile group: 'org.apache.ant', name: 'ant', version: '+'
+	// https://mvnrepository.com/artifact/org.samba.jcifs/jcifs
+	compile group: 'org.samba.jcifs', name: 'jcifs', version: '+'
+	
+	compile 'org.springframework.security:spring-security-core:+'
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-csv
+	compile group: 'org.apache.commons', name: 'commons-csv', version: '+'
+
+	// ftp dependency
+	compile group: 'commons-net', name: 'commons-net', version: '+'
+
+	// https://mvnrepository.com/artifact/org.apache.poi/poi
+	compile group: 'org.apache.poi', name: 'poi', version: '+'
+	// https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
+	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '+'
+
+	// https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf
+	compile group: 'org.thymeleaf', name: 'thymeleaf', version: '+'
+
+	// https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring4
+	compile group: 'org.thymeleaf', name: 'thymeleaf-spring4', version: '+'
+
+	// https://mvnrepository.com/artifact/org.quartz-scheduler/quartz
+	compile group: 'org.quartz-scheduler', name: 'quartz', version: '+'
+
+	// https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
+	compile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+
+
+}
+
+
+version = 1.0
+
+//compileJava{
+//	options.encoding = 'UTF-8'
+//	classpath = configurations.compile
+//}
+
+compileGroovy{
+	options.encoding = 'UTF-8'
+	classpath = configurations.compile
+}
+
+def mainclass = properties["manifest.mainclass"];
+jar{
+ 	manifest {
+        attributes 'Main-Class': mainclass;
+        attributes 'Class-Path': "./ " + configurations.runtime.findAll {it.getName().endsWith('.jar') }.collect { "lib/${it.getName()}" }.join(' ')
+    }
+    
+    exclude "*.properties"
+}
+
+
+uploadArchives {
+    repositories {
+        flatDir {
+            dirs 'repos'
+        }
+//        mavenDeployer {
+//            repository(url: "http://nexus.kdcs01.com/content/repositories/releases") {
+//                authentication(userName: "lixb", password: "lixb@0715")
+//            }
+//
+//            pom{
+//            	version = "1.0"
+//            	artifactId = "common-ls"
+//            	groupId = "com.52ove.common-ls"
+//            	packaging = "jar"
+//            	withXml {
+//				    def root = asNode()
+//				    root.remove(root.dependencies)
+//
+//			    }
+//            }
+//        }
+    }
+}
+
+task copylib {
+
+	doLast{
+		def dir = file("./repos/lib")
+		if(!dir.exists()){
+			dir.mkdirs();
+		}
+		
+		copy{
+			from configurations.runtime.findAll {it.getName().endsWith('.jar') }
+			into dir
+		}
+	}
+}
+
+clean{
+	doFirst{
+		fileTree('repos').each{
+			it.delete()
+		}
+		file('repos').delete();
+		print "repos dir delete."
+	}
+}
+
+task deploy(dependsOn:[jar,uploadArchives,copylib]) {
+	doLast{
+	
+	}
+}
+
+	
+task undeploy(dependsOn:clean) {
+	doLast{
+	
+	}
+}
+
+task llast {
+	doLast{
+		println new Date()
+	}
+}
+
+tasks.findAll{it.name != 'llast'}.each{it.finalizedBy llast}
+
+eclipse {
+  classpath {
+	minusConfigurations += [configurations.removeOnBuildEclipse]
+    downloadSources = true
+    downloadJavadoc = false
+  }
+}
+
