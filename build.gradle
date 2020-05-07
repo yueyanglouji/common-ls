@@ -53,7 +53,7 @@ repositories {
 	//}
     mavenCentral()
 }
-	
+
 dependencies {
 	compile group: 'ch.qos.logback', name: 'logback-classic', version: '+'
 	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta0'
@@ -74,8 +74,8 @@ dependencies {
 	
 	compile 'org.mybatis:mybatis:+'
 	compile 'org.springframework:spring-jdbc:+'
-    //compile 'org.apache.httpcomponents:httpclient:+'
-	//compile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '+'
+    compile 'org.apache.httpcomponents:httpclient:+'
+	compile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '+'
 	
 	compile group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '+'
 	compile group: 'org.apache.httpcomponents.client5', name: 'httpclient5-fluent', version: '+'
@@ -149,23 +149,6 @@ uploadArchives {
         flatDir {
             dirs 'repos'
         }
-//        mavenDeployer {
-//            repository(url: "http://nexus.kdcs01.com/content/repositories/releases") {
-//                authentication(userName: "lixb", password: "lixb@0715")
-//            }
-//
-//            pom{
-//            	version = "1.0"
-//            	artifactId = "common-ls"
-//            	groupId = "com.52ove.common-ls"
-//            	packaging = "jar"
-//            	withXml {
-//				    def root = asNode()
-//				    root.remove(root.dependencies)
-//
-//			    }
-//            }
-//        }
     }
 }
 

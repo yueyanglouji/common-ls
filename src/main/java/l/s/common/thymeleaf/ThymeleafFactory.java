@@ -38,6 +38,23 @@ public class ThymeleafFactory {
 		return thymeleaf;
 	}
 
+	public static FileContentThymeleaf getFileContentThymeleaf(TemplateMode model, String encoding, String prefix, String suffix, boolean cacheAble){
+		return getFileContentThymeleaf(model, Application.getContext().getLocale(), encoding, prefix, suffix, cacheAble);
+	}
+
+	public static FileContentThymeleaf getFileContentThymeleaf(TemplateMode model, Locale locale, String encoding, String prefix, String suffix, boolean cacheAble){
+		FileContentThymeleaf thymeleaf = new FileContentThymeleaf();
+		thymeleaf.setTemplateMode(model);
+		thymeleaf.setGlobalLocal(locale);
+		thymeleaf.setEncoding(encoding);
+		thymeleaf.setPrefix(prefix);
+		thymeleaf.setSuffix(suffix);
+		thymeleaf.setCacheAble(cacheAble);
+		thymeleaf.initializationEngine();
+
+		return thymeleaf;
+	}
+
 	public static EngineExistsThymeleaf getEngineExistsThymeleaf(TemplateEngine engine){
 		return getEngineExistsThymeleaf(engine, Application.getContext().getLocale());
 	}

@@ -57,13 +57,13 @@ public class HttpUpStreamEntity extends AbstractHttpEntity implements Cloneable 
 	}
 
 	@Override
-	public void writeTo(OutputStream outstream) throws IOException {
-		Args.notNull(outstream, "Output stream");
+	public void writeTo(OutputStream outStream) throws IOException {
+		Args.notNull(outStream, "Output stream");
 		byte[] b = content.toByteArray();
 				
 		try {
-			outstream.write(b);
-			outstream.flush();
+			outStream.write(b);
+			outStream.flush();
 		} finally{
 			content.close();
 		}

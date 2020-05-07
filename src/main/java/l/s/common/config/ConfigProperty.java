@@ -1,14 +1,19 @@
 package l.s.common.config;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.*;
 
 import l.s.common.bean.BeanConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 public class ConfigProperty {
+
+	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private static ConfigProperty configProperty;
 
@@ -16,7 +21,9 @@ public class ConfigProperty {
     
     private String fileEncoding = "UTF-8";
 
-	protected Map<String, Object> map;
+	protected Properties map;
+
+	protected List<Properties> allMap;
 
 	private BeanConverter converter;
 
@@ -25,7 +32,8 @@ public class ConfigProperty {
 	}
 
 	private ConfigProperty(){
-		map = new HashMap<>();
+		map = new Properties();
+		this.allMap = new ArrayList<>();
 		this.converter = BeanConverter.getDefault();
 	}
 
@@ -39,37 +47,53 @@ public class ConfigProperty {
 	public void loadProperties(){
 		
 		for(int i=0;i<locations.length;i++){
-			Scanner in = null;
 			try{
 				Resource resource = locations[i];
-				File file = resource.getFile();
-				in = new Scanner(file, fileEncoding);
-				while(in.hasNextLine()){
-					String line = in.nextLine();
-					if(line.startsWith("#")){
-						continue;
+				if(resource.getClass() == ClassPathResource.class){
+					URL baseURL = resource.getURL();
+					ClassPathResource classPathResource = (ClassPathResource)resource;
+					Enumeration<URL> enumeration = classPathResource.getClassLoader().getResources(classPathResource.getPath());
+					while (enumeration.hasMoreElements()){
+						URL url = enumeration.nextElement();
+						if(url.equals(baseURL)){
+							continue;
+						}
+						loadResource(url);
 					}
-					int index = line.indexOf('=');
-					if(index == -1){
-						continue;
-					}
-					String key = line.substring(0,index);
-					String value = line.substring(index + 1);
-					map.put(key, value);
+					loadResource(baseURL);
+				}else{
+					URL url = resource.getURL();
+					loadResource(url);
 				}
 			}catch (Exception e){
-
-			}finally {
-				if(in != null){
-					try {
-						in.close();
-					}catch (Exception e){
-					}
-				}
+				log.error(e.getMessage(), e);
+				throw new RuntimeException(e);
 			}
-
 		}
 		
+	}
+
+	private void loadResource(URL url) throws Exception{
+		try(
+				InputStream fin = url.openStream();
+				InputStreamReader in = new InputStreamReader(fin, fileEncoding);
+		){
+			Properties properties = new Properties();
+			properties.load(in);
+			this.allMap.add(properties);
+
+			for(Map.Entry<Object, Object> en : properties.entrySet()){
+				map.put(en.getKey(),en.getValue());
+			}
+		}
+	}
+
+	public List<Properties> getAllPropertiesLoadedHistoryIncludeOverwrite(){
+		return allMap;
+	}
+
+	public Map<Object, Object> getAllProperties(){
+		return map;
 	}
 
 	public Object getProperty(String key){
@@ -78,6 +102,9 @@ public class ConfigProperty {
 
 	public<T> T getProperty(String key, Class<T> clazz){
 		Object value = map.get(key);
+		if(clazz == null){
+			return (T)getProperty(key);
+		}
 		if(value == null){
 			if(!clazz.isPrimitive()){
 				return null;
@@ -90,13 +117,20 @@ public class ConfigProperty {
 		}
 	}
 
-	public<T> T getProperty(String key, T defaultvalue){
+	public<T> T getProperty(String key, T defaultValue){
+		if(defaultValue == null){
+			return (T)getProperty(key);
+		}
+		return getPropertyWithDefault(key, defaultValue);
+	}
+
+	private <T> T getPropertyWithDefault(String key, T defaultValue){
 		Object value = map.get(key);
 		if(value == null){
-			return defaultvalue;
+			return defaultValue;
 		}
-		if(converter.canConvert(value, defaultvalue.getClass())){
-			return (T)converter.convert(value, defaultvalue.getClass());
+		if(converter.canConvert(value, defaultValue.getClass())){
+			return (T)converter.convert(value, defaultValue.getClass());
 		}else{
 			return (T)value;
 		}

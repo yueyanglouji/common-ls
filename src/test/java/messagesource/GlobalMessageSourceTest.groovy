@@ -8,7 +8,7 @@ class GlobalMessageSourceTest {
         source.setBasename("messagesource/ms")
 
 
-        String message = source.getMessage("ms.message.xml.FileName", new Object[0],  Locale.JAPAN)
+        String message = source.getMessage("ms.message.xml.FileName1", new Object[0],  Locale.JAPAN)
         println message
     }
 }

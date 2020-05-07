@@ -6,7 +6,7 @@ public class DownloadDevice{
 	
 	private Response response;
 	
-	private Exception exception;
+	private Throwable exception;
 	
 	private boolean status;
 	
@@ -33,7 +33,7 @@ public class DownloadDevice{
 		return response;
 	}
 
-	public Exception getException() {
+	public Throwable getException() {
 		return exception;
 	}
 
@@ -53,7 +53,7 @@ public class DownloadDevice{
 		this.response = response;
 	}
 
-	void setException(Exception exception) {
+	void setException(Throwable exception) {
 		this.exception = exception;
 	}
 

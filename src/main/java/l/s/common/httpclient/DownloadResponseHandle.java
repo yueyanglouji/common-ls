@@ -3,6 +3,7 @@ package l.s.common.httpclient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.hc.client5.http.ClientProtocolException;
@@ -26,14 +27,33 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 		this.download = download;
 		downloadDevice = new DownloadDevice();
 	}
-	
+
+	void doRequest(Future<?> f){
+		new Thread(()->{
+			try {
+				f.get();
+			}catch (Throwable e){
+				e.printStackTrace();
+				Response response = new Response();
+				response.setSuccess(false);
+				response.setException(e);
+
+				downloadDevice.setStatus(false);
+				downloadDevice.setRate(-1);
+				downloadDevice.setResponse(response);
+				downloadDevice.setException(e);
+				downloadDevice.setWaite(false);
+			}
+		}).start();
+	}
+
 	@Override
 	public Response handleResponse(ClassicHttpResponse r) throws ClientProtocolException, IOException {
 		InputStream inputStream = null;
 		InputStream in = null;
-		
+
 		try{
-			
+			System.out.println("##################################################################");
 			Response response = new Response();
 			
 			ResponseHeader header = new ResponseHeader();
@@ -127,11 +147,11 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 			
 			downloadDevice.setStatus(true);
 			downloadDevice.setRate(1);
-			downloadDevice.setWaite(false);
 			downloadDevice.setResponse(response);
+			downloadDevice.setWaite(false);
 			return response;
 			
-		}catch(Exception e){
+		}catch(Throwable e){
 			e.printStackTrace();
 			if(inputStream != null){
 				inputStream.close();
@@ -145,9 +165,9 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 			
 			downloadDevice.setStatus(false);
 			downloadDevice.setRate(-1);
-			downloadDevice.setWaite(false);
 			downloadDevice.setResponse(response);
 			downloadDevice.setException(e);
+			downloadDevice.setWaite(false);
 			return response;
 		}
 		

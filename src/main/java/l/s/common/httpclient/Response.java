@@ -8,7 +8,7 @@ public class Response {
 	
 	private ResponseContent content;
 	
-	private Exception exception;
+	private Throwable exception;
 	
 	public ResponseHeader getHeader() {
 		return header;
@@ -34,11 +34,11 @@ public class Response {
 		this.success = success;
 	}
 
-	public Exception getException() {
+	public Throwable getException() {
 		return exception;
 	}
 
-	public void setException(Exception exception) {
+	public void setException(Throwable exception) {
 		this.exception = exception;
 	}
 }

@@ -2,7 +2,9 @@ package l.s.common.messagesource;
 
 import l.s.common.context.Application;
 import l.s.common.context.Context;
+import l.s.common.context.GlobalContext;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
 
@@ -22,6 +24,10 @@ public class MessageSourceHandler extends org.springframework.context.support.Me
 
     public static MessageSourceHandler getInstance(){
         return new MessageSourceHandler(Application.getContext());
+    }
+
+    protected Locale getDefaultLocale() {
+        return GlobalContext.getContext().getLocale();
     }
 
 }

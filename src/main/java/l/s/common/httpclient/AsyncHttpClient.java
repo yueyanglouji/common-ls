@@ -1,6 +1,5 @@
 package l.s.common.httpclient;
 
-import org.apache.hc.client5.http.cookie.CookieSpecs;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.fluent.Executor;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -11,6 +10,7 @@ import org.apache.hc.core5.util.TimeValue;
 
 import l.s.common.httpclient.support.CustomClientConnectionReuseStrategy;
 import l.s.common.httpclient.support.NoConnectionReuseStrategy;
+import org.apache.http.client.config.CookieSpecs;
 
 public class AsyncHttpClient {
 	
@@ -20,7 +20,7 @@ public class AsyncHttpClient {
 	
 	static {
         	RequestConfig globalConfig = RequestConfig.custom()
-        			.setCookieSpec(CookieSpecs.STANDARD.ident)
+        			.setCookieSpec(CookieSpecs.STANDARD)
         			.setConnectTimeout(Timeout.ofSeconds(4).get())
         			//.setSocketTimeout(Timeout.ofSeconds(4))
         			.setConnectionRequestTimeout(Timeout.ofSeconds(4).get())
@@ -69,7 +69,7 @@ public class AsyncHttpClient {
 	
 	private CookieStore cookieStore;
 	
-	private Timeout connecttimeout;
+	private Timeout connectTimeout;
 	
 	private String proxyHost;
 	
@@ -94,7 +94,7 @@ public class AsyncHttpClient {
 		
 		this.async = Async.newInstance();
 		this.async.use(this.executor);
-		this.connecttimeout = Timeout.ofSeconds(4);
+		this.connectTimeout = Timeout.ofSeconds(4);
 		this.defaultRequestCharset = "UTF-8";
 		this.defaultResponseCharset = "UTF-8";
 	}
@@ -118,13 +118,13 @@ public class AsyncHttpClient {
 		return r;
 	}
 	
-	public AsyncHttpClient connectTimenout(org.apache.hc.core5.util.Timeout connecttimeout){
-		this.connecttimeout = Timeout.ofTimeout(connecttimeout);
+	public AsyncHttpClient connectTimeout(org.apache.hc.core5.util.Timeout connectTimeout){
+		this.connectTimeout = Timeout.ofTimeout(connectTimeout);
 		return this;
 	}
 	
-	public AsyncHttpClient connectTimenout(Timeout connecttimeout){
-		this.connecttimeout = connecttimeout;
+	public AsyncHttpClient connectTimeout(Timeout connectTimeout){
+		this.connectTimeout = connectTimeout;
 		return this;
 	}
 	
@@ -198,8 +198,8 @@ public class AsyncHttpClient {
 		return cookieStore;
 	}
 
-	public Timeout getConnecttimeout() {
-		return connecttimeout;
+	public Timeout getConnectTimeout() {
+		return connectTimeout;
 	}
 
 	public String getProxyHost() {

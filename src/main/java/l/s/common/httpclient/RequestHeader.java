@@ -35,4 +35,13 @@ public class RequestHeader {
 		return headers;
 	}
 
+	public Map<String, List<String>> getHeadersByLowercaseKey() {
+		Map<String, List<String>> map = new HashMap<>();
+		for(Map.Entry<String, List<String>> en : headers.entrySet()){
+			String key = en.getKey();
+			map.put(key.toLowerCase(), en.getValue());
+		}
+		return map;
+	}
+
 }

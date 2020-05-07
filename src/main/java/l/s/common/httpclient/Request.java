@@ -58,10 +58,18 @@ public class Request {
 	public void stream(InputStream in) throws Exception{
 		stream.add(in);
 	}
-	
+
+	public Map<String, String> getHeadersWithLowercaseKey(){
+		return getHeaders(true);
+	}
+
 	public Map<String, String> getHeaders(){
+		return getHeaders(false);
+	}
+
+	private Map<String, String> getHeaders(boolean lowercaseKey){
 		Map<String, List<String>> map = header.getHeaders();
-		
+
 		Map<String, String> ret = new HashMap<String, String>();
 		for(Entry<String, List<String>> e: map.entrySet()){
 			String key = e.getKey();
@@ -73,8 +81,11 @@ public class Request {
 			if(builder.charAt(builder.length()-1) == ';'){
 				builder.deleteCharAt(builder.length()-1);
 			}
-			
-			ret.put(key, builder.toString());
+			if(lowercaseKey){
+				ret.put(key.toLowerCase(), builder.toString());
+			}else{
+				ret.put(key, builder.toString());
+			}
 		}
 		
 		return ret;

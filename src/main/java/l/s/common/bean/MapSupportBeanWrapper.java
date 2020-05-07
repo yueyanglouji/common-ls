@@ -1,6 +1,6 @@
 package l.s.common.bean;
 
-import javafx.beans.property.Property;
+//import javafx.beans.property.Property;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;

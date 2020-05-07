@@ -13,12 +13,12 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
 public class ContentResponseHandle implements HttpClientResponseHandler<Response>{
 	
-	private String defalutCharset;
+	private String defaultCharset;
 	
 	private String charset;
 	
-	public ContentResponseHandle(String charset, String defalutCharset) {
-		this.defalutCharset = defalutCharset;
+	public ContentResponseHandle(String charset, String defaultCharset) {
+		this.defaultCharset = defaultCharset;
 		this.charset = charset;
 	}
 
@@ -70,7 +70,7 @@ public class ContentResponseHandle implements HttpClientResponseHandler<Response
 							contentType = contentType.substring(0, contentType.indexOf(";")).trim();
 						}
 					}else{
-						contentType = defalutCharset;
+						contentType = defaultCharset;
 					}
 				}else{
 					contentType = charset;
@@ -107,7 +107,7 @@ public class ContentResponseHandle implements HttpClientResponseHandler<Response
 			
 			return response;
 			
-		}catch(Exception e){
+		}catch(Throwable e){
 			e.printStackTrace();
 			if(scanner != null){
 				scanner.close();

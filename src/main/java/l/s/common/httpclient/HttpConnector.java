@@ -21,7 +21,7 @@ public class HttpConnector {
 	
 	private AsyncHttpClient client;
 	
-	private Timeout connecttimeout;
+	private Timeout connectTimeout;
 	
 	private String proxyHost = null;
 	
@@ -44,13 +44,13 @@ public class HttpConnector {
 		
 		connect.client = client;
 		
-		connect.connecttimeout = client.getConnecttimeout();
+		connect.connectTimeout = client.getConnectTimeout();
 		
 		return connect;
 	}
 	
-	public HttpConnector connectTimenout(Timeout connecttimeout){
-		this.connecttimeout = connecttimeout;
+	public HttpConnector connectTimeout(Timeout connectTimeout){
+		this.connectTimeout = connectTimeout;
 		return this;
 	}
 	
@@ -67,7 +67,7 @@ public class HttpConnector {
 		return this;
 	}
 	
-	public HttpConnector useRuestCharset(String requestCharset){
+	public HttpConnector useRequestCharset(String requestCharset){
 		this.requestCharset = requestCharset;
 		return this;
 	}
@@ -198,11 +198,10 @@ public class HttpConnector {
 		request.setMethod(RequestMethod.GET);
 		
 		org.apache.hc.client5.http.fluent.Request r = toHttpClientRequest();
-		//r.connectionTimeout(org.apache.hc.core5.util.Timeout.ofSeconds(0));
-		
+
 		DownloadResponseHandle handle = new DownloadResponseHandle(out);
-		client.getAsync().execute(r, handle);
-		
+		Future<?> f = client.getAsync().execute(r, handle);
+		handle.doRequest(f);
 		return handle.getDownloadDevice();
 	}
 	
@@ -210,11 +209,10 @@ public class HttpConnector {
 		request.setMethod(RequestMethod.POST);
 		
 		org.apache.hc.client5.http.fluent.Request r = toHttpClientRequest();
-		//r.connectionTimeout(org.apache.hc.core5.util.Timeout.ofSeconds(0));
-		
+
 		DownloadResponseHandle handle = new DownloadResponseHandle(out);
-		client.getAsync().execute(r, handle);
-		
+		Future<?> f = client.getAsync().execute(r, handle);
+		handle.doRequest(f);
 		return handle.getDownloadDevice();
 	}
 	
@@ -231,27 +229,27 @@ public class HttpConnector {
 		
 		if(request.getMethod() != null){
 			if(request.getMethod() == RequestMethod.GET){
-				client = org.apache.hc.client5.http.fluent.Request.Get(url);
+				client = org.apache.hc.client5.http.fluent.Request.get(url);
 			}
 			else if(request.getMethod() == RequestMethod.POST){
-				client = org.apache.hc.client5.http.fluent.Request.Post(url);
+				client = org.apache.hc.client5.http.fluent.Request.post(url);
 			}
 			else if(request.getMethod() == RequestMethod.PUT){
-				client = org.apache.hc.client5.http.fluent.Request.Put(url);
+				client = org.apache.hc.client5.http.fluent.Request.put(url);
 			}
 			else if(request.getMethod() == RequestMethod.DELETE){
-				client = org.apache.hc.client5.http.fluent.Request.Delete(url);
+				client = org.apache.hc.client5.http.fluent.Request.delete(url);
 			}
 			else{
-				client = org.apache.hc.client5.http.fluent.Request.Post(url);
+				client = org.apache.hc.client5.http.fluent.Request.post(url);
 			}
 		}else{
-			client = org.apache.hc.client5.http.fluent.Request.Post(url);
+			client = org.apache.hc.client5.http.fluent.Request.post(url);
 		}
+
+		Timeout connOut = this.connectTimeout != null? this.connectTimeout : this.client.getConnectTimeout();
 		
-		Timeout conntout = this.connecttimeout != null? this.connecttimeout : this.client.getConnecttimeout();
-		
-		client.connectTimeout(conntout.get());
+		client.connectTimeout(connOut.get());
 		
 		if(this.proxyHost != null && !this.proxyHost.equals("")){
 			client.viaProxy(new HttpHost(proxyScheme, proxyHost, proxyPort));
@@ -261,23 +259,24 @@ public class HttpConnector {
 		}
 		
 		Map<String , String> headers = request.getHeaders();
+		Map<String , String> lowercaseHeaders = request.getHeadersWithLowercaseKey();
 		for(Entry<String, String> e:headers.entrySet()){
 			client.addHeader(e.getKey(), e.getValue());
 		}
 		
-		if(headers.get("Cache-control") == null){
+		if(lowercaseHeaders.get("cache-control") == null){
 			client.setCacheControl("no-cache");
 		}
 		
-		if(headers.get("Content-type") == null){
+		if(lowercaseHeaders.get("content-type") == null){
 			if(this.contentType != null){
-				client.addHeader("Content-type", this.contentType.getMimeType());
+				client.addHeader("Content-Type", this.contentType.getMimeType());
 			}
 			else if(this.request.getMethod() != RequestMethod.GET){
 				if(this.request.getParam().getParam().size() > 0){
-					client.addHeader("Content-type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+					client.addHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
 				}else{
-					client.addHeader("Content-type", ContentType.DEFAULT_BINARY.getMimeType());
+					client.addHeader("Content-Type", ContentType.DEFAULT_BINARY.getMimeType());
 				}
 			}
 		}

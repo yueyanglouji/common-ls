@@ -60,7 +60,7 @@ public class QuartZ {
 		scheduler.shutdown(false);
 	}
 	
-	private JobDetail createJob(Runnable runnable){
+	public static JobDetail createJob(Runnable runnable){
 		// Build JobDetail instance.
 		JobDetailImpl jdi = new JobDetailImpl();
 		JobKey key = new JobKey(Key.createUniqueName(null), null);

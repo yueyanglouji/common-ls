@@ -1,10 +1,15 @@
 package l.s.common.thymeleaf;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import l.s.common.messagesource.GlobalResourceBundleMessageSource;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.linkbuilder.StandardLinkBuilder;
+import org.thymeleaf.messageresolver.AbstractMessageResolver;
+import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,6 +52,11 @@ public abstract class Thymeleaf {
 		engine.addMessageResolver(templateMessageResolver);
 	}
 
+	public Thymeleaf addExtentMessageResolver(final CustomMessageResolver messageResolver){
+		engine.addMessageResolver(messageResolver);
+		return this;
+	}
+
 	public void addDefaultMessage(String key, String value){
 		this.templateMessageResolver.getStandardMessageResolver().addDefaultMessage(key, value);
 	}
@@ -77,4 +87,5 @@ public abstract class Thymeleaf {
 	public String process(String template){
 		return engine.process(template, context.getContext());
 	}
+
 }
