@@ -218,7 +218,7 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
     }
 
     //object append {}, array append [] ,if array append a new array use [[...],...]
-    public void append(String jsonString){
+    public JsonNode append(String jsonString){
 
         if(jsonString.startsWith("[")){
             if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ArrayNode){
@@ -254,14 +254,16 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
                 throw new RuntimeException("this node is not a object node, can not append jsonString.");
             }
         }
+        return this;
     }
 
-    public void append(Object bean){
+    public JsonNode append(Object bean){
         JsonNode node = JsonNode.createFromBeanObject(bean);
         moveAppend(node);
+        return this;
     }
 
-    public void moveAppend(JsonNode node){
+    public JsonNode moveAppend(JsonNode node){
 
         if(node.type == JsonNode.ArrayNode){
             if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ArrayNode){
@@ -316,10 +318,10 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
         else{
             throw new RuntimeException("not append able");
         }
-
+        return this;
     }
 
-    public void append(String key, Object value){
+    public JsonNode append(String key, Object value){
 
         if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ObjectNode){
             this.type = JsonNode.ObjectNode;
@@ -330,10 +332,11 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
         }else{
             throw new RuntimeException("this node is not a object node, can not append jsonString.");
         }
+        return this;
     }
 
     //will append if not exists
-    public void replace(String jsonString){
+    public JsonNode replace(String jsonString){
 
         if(jsonString.startsWith("[")){
             throw new RuntimeException("replace method just used to ObjectNode.");
@@ -356,14 +359,16 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
                 throw new RuntimeException("replace method just used to ObjectNode.");
             }
         }
+        return this;
     }
 
-    public void replace(Object bean){
+    public JsonNode replace(Object bean){
         JsonNode node = JsonNode.createFromBeanObject(bean);
         replace(node.toJsonString());
+        return this;
     }
 
-    public void replace(String key, Object value){
+    public JsonNode replace(String key, Object value){
 
         if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ObjectNode){
             this.type = JsonNode.ObjectNode;
@@ -375,6 +380,7 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
         }else{
             throw new RuntimeException("replace method just used to ObjectNode.");
         }
+        return this;
     }
 
 
@@ -563,7 +569,7 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
     public<T> T toBean(Class<T> c) throws Exception{
         if(this.getType() == ObjectNode){
             Object o = c.newInstance();
-            BeanConnector conn = BeanConnector.connect(o);
+            BeanConnector conn = BeanConnector.connect(o, true);
             wrap(conn, null);
 
             return (T)o;

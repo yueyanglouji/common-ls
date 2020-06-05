@@ -34,7 +34,7 @@ public class JsonNode{
 	private Object value;
 	
 	private short type;
-	
+
 	private boolean isRootNode;
 	
 	private Class<?> T;
@@ -98,7 +98,11 @@ public class JsonNode{
 		
 		return child;
 	}
-	
+
+	public static JsonNode create(){
+		return createFromJsonString("{}");
+	}
+
 	public static JsonNode createFromJsonString(String jsonSring){
 		if(jsonSring.startsWith("[")){
 			JSONArray array = new JSONArray(jsonSring);
@@ -191,7 +195,7 @@ public class JsonNode{
 	}
 	
 	//object append {}, array append [] ,if array append a new array use [[...],...]
-	public void append(String jsonString){
+	public JsonNode append(String jsonString){
 
 		if(jsonString.startsWith("[")){
 			if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ArrayNode){
@@ -227,14 +231,16 @@ public class JsonNode{
 				throw new RuntimeException("this node is not a object node, can not append jsonString.");
 			}
 		}
+		return this;
 	}
 	
-	public void append(Object bean){
+	public JsonNode append(Object bean){
 		JsonNode node = JsonNode.createFromBeanObject(bean);
 		moveAppend(node);
+		return this;
 	}
 	
-	public void moveAppend(JsonNode node){
+	public JsonNode moveAppend(JsonNode node){
 		
 		if(node.type == JsonNode.ArrayNode){
 			if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ArrayNode){
@@ -289,10 +295,10 @@ public class JsonNode{
 		else{
 			throw new RuntimeException("not append able");
 		}
-	
+		return this;
 	}
 	
-	public void append(String key, Object value){
+	public JsonNode append(String key, Object value){
 		
 		if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ObjectNode){
 			this.type = JsonNode.ObjectNode;
@@ -303,10 +309,11 @@ public class JsonNode{
 		}else{
 			throw new RuntimeException("this node is not a object node, can not append jsonString.");
 		}
+		return this;
 	}
 	
 	//will append if not exists
-	public void replace(String jsonString){
+	public JsonNode replace(String jsonString){
 
 		if(jsonString.startsWith("[")){
 			throw new RuntimeException("replace method just used to ObjectNode.");
@@ -329,14 +336,16 @@ public class JsonNode{
 				throw new RuntimeException("replace method just used to ObjectNode.");
 			}
 		}
+		return this;
 	}
 	
-	public void replace(Object bean){
+	public JsonNode replace(Object bean){
 		JsonNode node = JsonNode.createFromBeanObject(bean);
 		replace(node.toJsonString());
+		return this;
 	}
 	
-	public void replace(String key, Object value){
+	public JsonNode replace(String key, Object value){
 		
 		if(this.getType() == JsonNode.TextNode && this.tripValue(".") == null || this.getType() == JsonNode.ObjectNode){
 			this.type = JsonNode.ObjectNode;
@@ -348,6 +357,7 @@ public class JsonNode{
 		}else{
 			throw new RuntimeException("replace method just used to ObjectNode.");
 		}
+		return this;
 	}
 	
 	
@@ -457,7 +467,11 @@ public class JsonNode{
 	public static String toJSON(String value){
 		return org.noggit.JSONUtil.toJSON(value); 
 	}
-	
+
+	public String toString(){
+		return valueToJsonString();
+	}
+
 	public String toJsonString(){
 		StringBuilder json = new StringBuilder("");
 		if(!this.isRootNode && parentNode.type != ArrayNode){
@@ -496,7 +510,7 @@ public class JsonNode{
 			
 			Object o = this.value;
 			
-			BeanConverter c = BeanConverter.getDefault();
+			BeanConverter c = this.rootNode.getBeanConverter();
 			Object value;
 			if(o == null){
 				value = null;
@@ -526,7 +540,7 @@ public class JsonNode{
 	public<T> T toBean(Class<T> c) throws Exception{
 		if(this.getType() == ObjectNode){
 			Object o = c.newInstance();
-			BeanConnector conn = BeanConnector.connect(o);
+			BeanConnector conn = BeanConnector.connect(o, true);
 			wrap(conn, null);
 			
 			return (T)o;
@@ -748,7 +762,7 @@ public class JsonNode{
 			return defaultValue;
 		}
 		
-		BeanConverter converter = BeanConverter.getDefault();
+		BeanConverter converter = this.rootNode.getBeanConverter();
 		if(converter.canConvert(value, c)) {
 			T t = converter.convert(value, c);
 			return t;
@@ -765,5 +779,8 @@ public class JsonNode{
 	public <T> T tripValue(String env, Class<T> c){
 		return tripValue(env, c, null);
 	}
-	
+
+	public boolean isRootNode() {
+		return isRootNode;
+	}
 }

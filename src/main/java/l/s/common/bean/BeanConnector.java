@@ -5,32 +5,48 @@ import java.beans.PropertyDescriptor;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 
-public class BeanConnector {
+public class BeanConnector<T> {
 
 	private BeanWrapper wrapper;
 	
 	private BeanConverter converter;
+
+	private T bean;
 	
 	private BeanConnector(){
 		
 	}
-	
-	public static BeanConnector connect(Object bean){
+
+	public static <T> BeanConnector<T> connect(T bean){
+		return connect(bean, false);
+	}
+
+	public static <T> BeanConnector<T> connect(T bean, boolean supportMap){
 		BeanConverter converter = BeanConverter.getDefault();
-		
-		BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
+
+		BeanWrapper wrapper;
+		if(supportMap){
+			wrapper = new MapSupportBeanWrapper(bean);
+		}else{
+			wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
+		}
 
 		wrapper.setConversionService(converter.service);
 		wrapper.setAutoGrowNestedPaths(true);
 		
-		BeanConnector conn = new BeanConnector();
+		BeanConnector<T> conn = new BeanConnector<T>();
 		conn.wrapper = wrapper;
 		conn.converter = converter;
+		conn.bean = bean;
 		
 		return conn;
 	}
-	
-	public BeanConnector setProperty(String propertyName, Object value){
+
+	public T getBean(){
+		return this.bean;
+	}
+
+	public BeanConnector<T> setProperty(String propertyName, Object value){
 		if(wrapper.isWritableProperty(propertyName)){
 			wrapper.setPropertyValue(propertyName, value);
 		}
