@@ -109,7 +109,7 @@ dependencies {
 	compile group: 'org.thymeleaf', name: 'thymeleaf', version: '+'
 
 	// https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring4
-	compile group: 'org.thymeleaf', name: 'thymeleaf-spring4', version: '+'
+	compile group: 'org.thymeleaf', name: 'thymeleaf-spring5', version: '+'
 
 	// https://mvnrepository.com/artifact/org.quartz-scheduler/quartz
 	compile group: 'org.quartz-scheduler', name: 'quartz', version: '+'

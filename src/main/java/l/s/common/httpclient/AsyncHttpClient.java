@@ -10,7 +10,6 @@ import org.apache.hc.core5.util.TimeValue;
 
 import l.s.common.httpclient.support.CustomClientConnectionReuseStrategy;
 import l.s.common.httpclient.support.NoConnectionReuseStrategy;
-import org.apache.http.client.config.CookieSpecs;
 
 public class AsyncHttpClient {
 	
@@ -20,7 +19,7 @@ public class AsyncHttpClient {
 	
 	static {
         	RequestConfig globalConfig = RequestConfig.custom()
-        			.setCookieSpec(CookieSpecs.STANDARD)
+        			.setCookieSpec("STANDARD")
         			.setConnectTimeout(Timeout.ofSeconds(4).get())
         			//.setSocketTimeout(Timeout.ofSeconds(4))
         			.setConnectionRequestTimeout(Timeout.ofSeconds(4).get())

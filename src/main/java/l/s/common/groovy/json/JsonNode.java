@@ -1,6 +1,7 @@
 package l.s.common.groovy.json;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
@@ -199,13 +200,17 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
             return root;
         }
         else{
-            BeanConnector conn = BeanConnector.connect(bean);
-
             JsonNode root = createRootNode(ObjectNode);
+            BeanConnector conn = BeanConnector.connect(bean, root.rootNode.getBeanConverter());
 
             PropertyDescriptor[] pds = conn.getAllPropertyPropertyDescriptors();
             for(PropertyDescriptor pd : pds){
                 String key = pd.getName();
+                if(key.equals("metaClass")){
+                    if(pd.getPropertyType().getName().equals("groovy.lang.MetaClass")){
+                        continue;
+                    }
+                }
                 JsonNode child = root.createChildNode();
                 child.setKey(key);
 
@@ -392,7 +397,7 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
             mjson.setValue(null);
             parentMjson.appendChild(mjson);
         }
-	else if(Closure.class.isAssignableFrom(json.getClass())){
+        else if(Closure.class.isAssignableFrom(json.getClass())){
             mjson.type = JsonNode.ObjectNode;
             Closure closure = (Closure) json;
             mjson.call(closure);
@@ -448,10 +453,10 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
                 parentMjson.appendChild(mjson);
             }
             else if (json.getClass().isArray()) {
-                Object[] arr = (Object[]) json;
+                Object arr = json;
                 mjson.type = JsonNode.ArrayNode;
-                for(int i=0;i<arr.length;i++){
-                    Object o = arr[i];
+                for(int i=0;i<Array.getLength(arr);i++){
+                    Object o = Array.get(arr, i);
                     JsonNode child = mjson.createChildNode();
                     child.setKey(i + "");
                     addChild(mjson, child, o);
@@ -478,11 +483,16 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
             }
             else{
                 mjson.type = JsonNode.ObjectNode;
-                BeanConnector conn = BeanConnector.connect(json);
+                BeanConnector conn = BeanConnector.connect(json, parentMjson.rootNode.getBeanConverter());
 
                 PropertyDescriptor[] pds = conn.getAllPropertyPropertyDescriptors();
                 for(PropertyDescriptor pd : pds){
                     String key = pd.getName();
+                    if(key.equals("metaClass")){
+                        if(pd.getPropertyType().getName().equals("groovy.lang.MetaClass")){
+                            continue;
+                        }
+                    }
                     JsonNode child = mjson.createChildNode();
                     child.setKey(key);
 
@@ -565,12 +575,73 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
         return json.toString();
     }
 
+    public Map toMap(){
+        return toMap(new HashMap());
+    }
+
+    public Map toMap(Map map){
+        if(this.getType() == ObjectNode){
+            for(int i=0;i<childs.size();i++){
+                JsonNode child = childs.get(i);
+                child.wrapMap(map);
+            }
+            return map;
+        }else{
+            throw new RuntimeException("this node is not a object node");
+        }
+    }
+
+    private void wrapMap(Map map){
+        if(this.type == ObjectNode){
+            Map m = new HashMap();
+            map.put(this.getKey(), m);
+            for(int i=0;i<childs.size();i++){
+                JsonNode child = childs.get(i);
+                child.wrapMap(m);
+            }
+        }
+        else if(this.type == ArrayNode){
+            List list = new ArrayList();
+            map.put(this.getKey(), list);
+            for(int i=0;i<childs.size();i++){
+                JsonNode child = childs.get(i);
+                child.wrapArray(list);
+            }
+        }else{
+            map.put(this.getKey(), this.getValue());
+        }
+    }
+
+    private void wrapArray(List listp){
+        if(this.type == ObjectNode){
+            Map m = new HashMap();
+            listp.add(m);
+            for(int i=0;i<childs.size();i++){
+                JsonNode child = childs.get(i);
+                child.wrapMap(m);
+            }
+        }
+        else if(this.type == ArrayNode){
+            List list = new ArrayList();
+            listp.add(list);
+            for(int i=0;i<childs.size();i++){
+                JsonNode child = childs.get(i);
+                child.wrapArray(list);
+            }
+        }else{
+            listp.add(this.getValue());
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public<T> T toBean(Class<T> c) throws Exception{
         if(this.getType() == ObjectNode){
+            if(Map.class.isAssignableFrom(c)){
+                return (T)(this.toMap((Map)c.newInstance()));
+            }
             Object o = c.newInstance();
-            BeanConnector conn = BeanConnector.connect(o, true);
-            wrap(conn, null);
+            BeanConnector conn = BeanConnector.connect(o, this.rootNode.getBeanConverter());
+            wrap(conn, null, null);
 
             return (T)o;
         }else{
@@ -578,7 +649,14 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
         }
     }
 
-    private void wrap(BeanConnector conn, String path){
+    private void wrap(BeanConnector conn, String path, String parent){
+        if(path != null){
+            Class<?> c = conn.getPropertyType(path);
+            if(c == null){
+                doIfNotWritableProperty(conn, this, path, parent, false);
+                return;
+            }
+        }
         if(this.type == ObjectNode){
             for(int i=0;i<childs.size();i++){
                 JsonNode child = childs.get(i);
@@ -593,17 +671,100 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
                         next = path + "." + child.getKey();
                     }
                 }
-                child.wrap(conn, next);
+                child.wrap(conn, next, path);
             }
         }
         else if(this.type == ArrayNode){
             for(int i=0;i<childs.size();i++){
                 JsonNode child = childs.get(i);
                 String next = path + "[" + child.getKey() + "]";
-                child.wrap(conn, next);
+                child.wrap(conn, next, path);
             }
         }else{
             conn.setProperty(path, this.getValue());
+        }
+    }
+
+    private Object outsizeArray(Object arr){
+        Object newArray = Array.newInstance(arr.getClass().getComponentType(), Array.getLength(arr) + 1);
+        for(int i=0;i<Array.getLength(arr);i++){
+            Array.set(newArray, i, Array.get(arr, i));
+        }
+        return newArray;
+    }
+
+    private void doIfNotWritableProperty(BeanConnector conn, JsonNode parent, String path, String parentPath, boolean trymap){
+        if(path.matches("^.*\\[\\d+\\]$") && !trymap){
+            try{
+                if(parent.type == ObjectNode){
+                    Object o = conn.getProperty(parentPath);
+                    if(o.getClass().isArray()){
+                        Object newArray = outsizeArray(o);
+                        Array.set(newArray, Array.getLength(o), parent.toMap());
+                        conn.setProperty(parentPath, newArray);
+                    }else{
+                        List b = (List) conn.getProperty(parentPath);
+                        b.add(parent.toMap());
+                    }
+                }
+                else if(parent.type == ArrayNode){
+                    Object o = conn.getProperty(parentPath);
+                    if(o.getClass().isArray()){
+                        Object newArray = outsizeArray(o);
+                        Array.set(newArray, Array.getLength(o), parent.valueToArray());
+                        conn.setProperty(parentPath, newArray);
+                    }else{
+                        List b = (List) o;
+                        b.add(parent.valueToArray());
+                    }
+
+                }
+                else{
+                    Object o = conn.getProperty(parentPath);
+                    if(o.getClass().isArray()){
+                        Object newArray = outsizeArray(o);
+                        Array.set(newArray, Array.getLength(o), parent.getValue());
+                        conn.setProperty(parentPath, newArray);
+                    }else{
+                        List b = (List) o;
+                        b.add(parent.getValue());
+                    }
+                }
+            }catch (Exception e){
+                this.doIfNotWritableProperty(conn, parent, path, parentPath, true);
+            }
+        }else{
+            if(parent.type == ObjectNode){
+                Map b = (Map)conn.getProperty(parentPath);
+                b.put(parent.getKey(), parent.toMap());
+            }
+            else if(parent.type == ArrayNode){
+                Map b = (Map)conn.getProperty(parentPath);
+                b.put(parent.getKey(), parent.valueToArray());
+            }
+            else{
+                Map b = (Map)conn.getProperty(parentPath);
+                b.put(parent.getKey(), parent.getValue());
+            }
+        }
+    }
+
+    private List valueToArray(){
+        if(this.type == ArrayNode){
+            List ret = new ArrayList();
+            for(int i=0;i<childs.size();i++){
+                JsonNode child = childs.get(i);
+                if(child.type == ObjectNode){
+                    ret.add(child.toMap());
+                }else if(child.type == ArrayNode){
+                    ret.add(child.valueToArray());
+                }else{
+                    ret.add(child.value);
+                }
+            }
+            return ret;
+        }else{
+            throw new RuntimeException("this node is not a array node");
         }
     }
 
@@ -846,8 +1007,7 @@ public class JsonNode extends GroovyObjectSupport implements DelegateClosure {
         return this.trip(property);
     }
 
-    public boolean isRootNode(){
+    public boolean isRootNode() {
         return isRootNode;
     }
 }
-

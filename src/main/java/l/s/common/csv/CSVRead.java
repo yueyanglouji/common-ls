@@ -19,7 +19,7 @@ public class CSVRead {
 	}
 	
 	public CSVRead withDelimiter(char ch){
-		format = format.withDelimiter(ch);
+		format = format.builder().setDelimiter(ch).build();
 		return this;
 	}
 	
@@ -28,7 +28,7 @@ public class CSVRead {
 	}
 	
 	public CSVRead withQuoteMode(QuoteMode mode){
-		format = format.withQuoteMode(mode);
+		format = format.builder().setQuoteMode(mode).build();
 		return this;
 	}
 	

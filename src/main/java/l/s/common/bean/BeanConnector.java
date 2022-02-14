@@ -7,6 +7,10 @@ import org.springframework.beans.PropertyAccessorFactory;
 
 public class BeanConnector<T> {
 
+	public BeanWrapper getWrapper() {
+		return wrapper;
+	}
+
 	private BeanWrapper wrapper;
 	
 	private BeanConverter converter;
@@ -18,18 +22,12 @@ public class BeanConnector<T> {
 	}
 
 	public static <T> BeanConnector<T> connect(T bean){
-		return connect(bean, false);
+		BeanConverter converter = BeanConverter.getDefault();
+		return connect(bean, converter);
 	}
 
-	public static <T> BeanConnector<T> connect(T bean, boolean supportMap){
-		BeanConverter converter = BeanConverter.getDefault();
-
-		BeanWrapper wrapper;
-		if(supportMap){
-			wrapper = new MapSupportBeanWrapper(bean);
-		}else{
-			wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
-		}
+	public static <T> BeanConnector<T> connect(T bean, BeanConverter converter){
+		BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
 
 		wrapper.setConversionService(converter.service);
 		wrapper.setAutoGrowNestedPaths(true);
@@ -71,12 +69,17 @@ public class BeanConnector<T> {
 	public PropertyDescriptor[] getAllPropertyPropertyDescriptors(){
 		return wrapper.getPropertyDescriptors();
 	}
-//	public boolean isReadableProperty(String propertyName){
-//		return wrapper.isReadableProperty(propertyName);
-//	}
-//	
-//	public boolean isWritableProperty(String propertyName){
-//		return wrapper.isWritableProperty(propertyName);
-//	}
+
+	public PropertyDescriptor getPropertyDescriptor(String propertyName){
+		return wrapper.getPropertyDescriptor(propertyName);
+	}
+
+	public boolean isReadableProperty(String propertyName){
+		return wrapper.isReadableProperty(propertyName);
+	}
+
+	public boolean isWritableProperty(String propertyName){
+		return wrapper.isWritableProperty(propertyName);
+	}
 	
 }
