@@ -1,7 +1,7 @@
 # use this project
 gradle:
 ```java
-implementation("com.woyouyigegushi.common-ls:common-ls:1.0.0")
+implementation("com.woyouyigegushi.common-ls:common-ls:1.0.5")
 ```
 maven:
 ```java
