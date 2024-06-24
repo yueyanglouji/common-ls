@@ -10,11 +10,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class ResourceDataSource implements DataSource {
-    private Resource _resource;
-    private FileTypeMap typeMap;
+    private final Resource _resource;
+    private final FileTypeMap typeMap;
 
     public ResourceDataSource(Resource file) {
-        this._resource = null;
         this.typeMap = null;
         this._resource = file;
     }

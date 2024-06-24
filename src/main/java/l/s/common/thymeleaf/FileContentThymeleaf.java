@@ -11,9 +11,14 @@ import java.util.Scanner;
 
 public class FileContentThymeleaf extends AbstractFileThymeleaf{
 
-	private Map<String, String> cacheMap;
+	private final Map<String, String> cacheMap;
 
 	public FileContentThymeleaf(){
+		this.cacheMap = new HashMap<>();
+	}
+
+	public FileContentThymeleaf(CONTEXT_TYPE contextType) {
+		super(contextType);
 		this.cacheMap = new HashMap<>();
 	}
 
@@ -24,6 +29,7 @@ public class FileContentThymeleaf extends AbstractFileThymeleaf{
 		engine.setTemplateResolver(resolver);
 	}
 
+	@Override
 	public FileContentThymeleaf setVariable(String name, Object value){
 
 		context.setVariable(name, value);
@@ -72,6 +78,7 @@ public class FileContentThymeleaf extends AbstractFileThymeleaf{
 		return getFileContent(template).matches("[\\s\\S]*xmlns\\:th\\s*=\\s*\"http\\://www\\.thymeleaf\\.org.*\"[\\s\\S]*");
 	}
 
+	@Override
 	public String process(String template){
 		try{
 			return super.process(getFileContent(template));

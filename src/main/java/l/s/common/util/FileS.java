@@ -33,7 +33,7 @@ public class FileS {
 	 * 
 	 * @param sorce
 	 * 			要剪切的文件或文件夹。
-	 * @param toDir
+	 * @param toFile
 	 * 			目的文件夹。
 	 * @throws Exception
 	 */
@@ -196,7 +196,7 @@ public class FileS {
 	/**
 	 * 
 	 * @param sourceFiles		//压缩的文件或文件夹，若文件或文件夹为多个，个文件的相对目录不可重复
-	 * @param toFile			//输出文件。
+	 * @param out			//输出文件。
 	 * @throws Exception
 	 */
 	public void packageFiles(File[] sourceFiles, OutputStream out,String charset)throws Exception{
@@ -220,7 +220,7 @@ public class FileS {
 	/**
 	 * 
 	 * @param sourceFile		//压缩的文件或文件夹
-	 * @param toFile			//输出文件。
+	 * @param out			//输出文件。
 	 * @throws Exception
 	 */
 	public void packageFiles(File sourceFile, OutputStream out,String charset) throws Exception{
@@ -243,7 +243,7 @@ public class FileS {
 	/**
 	 * 
 	 * @param sourceFiles		//压缩的文件或文件夹，若文件或文件夹为多个，个文件的相对目录不可重复
-	 * @param toFile			//输出文件。
+	 * @param out			//输出文件。
 	 * @throws Exception
 	 */
 	public void packageFiles(File[] sourceFiles,OutputStream out,FileFilter fileFilter,String charset)throws Exception{
@@ -258,7 +258,7 @@ public class FileS {
 	/**
 	 * 
 	 * @param sourceFile		//压缩的文件或文件夹
-	 * @param OutputStream			//输出流。windows-31j
+	 * @param out			//输出流。windows-31j
 	 * @throws Exception
 	 */
 	public void packageFiles(File sourceFile, OutputStream out,FileFilter fileFilter,String charset) throws Exception{
@@ -584,19 +584,6 @@ public class FileS {
         long time = file.lastModified();
         Date date = new Date(time);
         return date;
-    }  
-	
-	public static void main(String[] args)throws Exception {
-		
-		File file = new File("C:\\Users\\lixiaobao\\Desktop\\20150826\\FALCON素材\\新しいフォルダー   abc\\Falcon  　背景.jpg");
-		
-		FileS fileS = new FileS();
-		Date date = fileS.getCreateTime_windows(file);
-		System.out.println(date);
-		
-		date = fileS.getModifiedTime(file);
-		System.out.println(date);
-		
-	}
+    }
 	
 }

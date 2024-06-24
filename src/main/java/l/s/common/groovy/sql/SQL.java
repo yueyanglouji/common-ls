@@ -1,8 +1,6 @@
 package l.s.common.groovy.sql;
 
 import groovy.lang.Closure;
-import groovy.sql.Sql;
-import l.s.common.groovy.DelegateClosure;
 import l.s.common.groovy.GroovyObjectSupportDefault;
 import l.s.common.util.ReflectUtil;
 

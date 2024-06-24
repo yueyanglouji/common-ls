@@ -1,8 +1,6 @@
 package l.s.common.csv;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +10,7 @@ public class CSVHeader {
 	
 	List<String> list;
 	
-	private Map<String, Integer> map;
+	private final Map<String, Integer> map;
 	
 	public CSVHeader(Map<String, Integer> map){
 		this.map = map;
@@ -33,13 +31,10 @@ public class CSVHeader {
 			temp.add(tempmap);
 		}
 		
-		Collections.sort(temp,  new Comparator<Map<String, Object>>() {
-			@Override
-			public int compare(Map<String, Object> o1, Map<String, Object> o2) {
-				int index1 = (int)o1.get("index");
-				int index2 = (int)o2.get("index");
-				return index1 - index2;
-			}
+		temp.sort((o1, o2) -> {
+			int index1 = (int) o1.get("index");
+			int index2 = (int) o2.get("index");
+			return index1 - index2;
 		});
 		
 		for(Map<String, Object> m : temp){

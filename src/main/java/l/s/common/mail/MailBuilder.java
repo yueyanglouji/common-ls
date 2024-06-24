@@ -10,7 +10,7 @@ import java.util.List;
 
 public class MailBuilder {
 
-    private Mail mail;
+    private final Mail mail;
 
     public MailBuilder(MailService service){
         mail = new Mail();
@@ -33,9 +33,7 @@ public class MailBuilder {
         if(tos == null || tos.size() == 0){
             throw new RuntimeException("to set null");
         }
-        for(String to : tos){
-            mail.to.add(to);
-        }
+        mail.to.addAll(tos);
         return this;
     }
 
@@ -48,9 +46,7 @@ public class MailBuilder {
         if(ccs == null || ccs.size() == 0){
             throw new RuntimeException("cc set null");
         }
-        for(String cc : ccs){
-            mail.cc.add(cc);
-        }
+        mail.cc.addAll(ccs);
         return this;
     }
 
@@ -63,9 +59,7 @@ public class MailBuilder {
         if(bccs == null || bccs.size() == 0){
             throw new RuntimeException("bcc set null");
         }
-        for(String bcc : bccs){
-            mail.bcc.add(bcc);
-        }
+        mail.bcc.addAll(bccs);
         return this;
     }
 
@@ -87,8 +81,7 @@ public class MailBuilder {
     }
 
     public MailBuilder message_path(String filePath) {
-        FileSystemResource resource = new FileSystemResource(filePath);
-        mail.messageResource = resource;
+        mail.messageResource = new FileSystemResource(filePath);
         return this;
     }
 
@@ -106,8 +99,7 @@ public class MailBuilder {
     }
 
     public MailBuilder message_classpath(String filePath) {
-        ClassPathResource resource = new ClassPathResource(filePath);
-        mail.messageResource = resource;
+        mail.messageResource = new ClassPathResource(filePath);
         return this;
     }
 
@@ -130,14 +122,12 @@ public class MailBuilder {
     }
 
     public MailBuilder message_file(File file) {
-        FileSystemResource resource = new FileSystemResource(file);
-        mail.messageResource = resource;
+        mail.messageResource = new FileSystemResource(file);
         return this;
     }
 
     public MailBuilder message_content(String messageContent) {
-        InMemoryResource resource = new InMemoryResource(messageContent);
-        mail.messageResource = resource;
+        mail.messageResource = new InMemoryResource(messageContent);
         return this;
     }
 

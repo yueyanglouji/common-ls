@@ -17,12 +17,12 @@ public class CSV {
 	}
 	
 	public static CSVWrite newCsv(){
-		CSVFormat format = CSVFormat.EXCEL.withQuoteMode(QuoteMode.ALL);
+		CSVFormat format = CSVFormat.EXCEL.builder().setQuoteMode(QuoteMode.ALL).build();
 		return newCsv(format);
 	}
 	
 	public static CSVWrite newCsv(String[] headers){
-		CSVFormat format = CSVFormat.EXCEL.withHeader(headers).withQuoteMode(QuoteMode.ALL);
+		CSVFormat format = CSVFormat.EXCEL.builder().setHeader(headers).setQuoteMode(QuoteMode.ALL).build();
 		return newCsv(format);
 	}
 	
@@ -51,7 +51,7 @@ public class CSV {
 	public static CSVRead openCsv(File file, String charset, boolean withHeader) throws Exception{
 		CSVFormat format;
 		if(withHeader){
-			format = CSVFormat.EXCEL.withHeader();
+			format = CSVFormat.EXCEL.builder().setHeader().build();
 		}else{
 			format = CSVFormat.EXCEL;
 		}

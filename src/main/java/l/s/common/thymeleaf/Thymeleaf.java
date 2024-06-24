@@ -1,23 +1,14 @@
 package l.s.common.thymeleaf;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
-
 import l.s.common.messagesource.GlobalResourceBundleMessageSource;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.linkbuilder.StandardLinkBuilder;
-import org.thymeleaf.messageresolver.AbstractMessageResolver;
-import org.thymeleaf.messageresolver.IMessageResolver;
 import org.thymeleaf.templatemode.TemplateMode;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public abstract class Thymeleaf {
 
-	protected ThymeleafContext context;
+	protected AbstractThymeleafContext context;
 
 	protected TemplateEngine engine;
 
@@ -26,7 +17,31 @@ public abstract class Thymeleaf {
 	protected TemplateMessageResolver templateMessageResolver;
 	
 	public Thymeleaf(){
+		try {
+			Class.forName("javax.servlet.http.HttpServletRequest");
+			this.context = new JavaxThymeleafContext();
+			return;
+		} catch (ClassNotFoundException e) {
+			//
+		}
+		try {
+			Class.forName("jakarta.servlet.http.HttpServletRequest");
+			this.context = new JakartaThymeleafContext();
+			return;
+		} catch (ClassNotFoundException e) {
+			//
+		}
 		this.context = new ThymeleafContext();
+	}
+
+	public Thymeleaf(CONTEXT_TYPE contextType){
+		if(contextType == CONTEXT_TYPE.jakartaServlet){
+			this.context = new JakartaThymeleafContext();
+		}else if(contextType == CONTEXT_TYPE.javaxServlet) {
+			this.context = new JavaxThymeleafContext();
+		}else {
+			this.context = new ThymeleafContext();
+		}
 	}
 
 	public void setTemplateMode(TemplateMode mode){
@@ -79,7 +94,13 @@ public abstract class Thymeleaf {
 		return this;
 	}
 
-	public Thymeleaf setWebContext(HttpServletRequest request, HttpServletResponse response){
+	/**
+	 *
+	 * @param request javax.http.HttpServletRequest or jakarta.http.HttpServletRequest
+	 * @param response javax.http.HttpServletResponse or jakarta.http.HttpServletResponse
+	 * @return this
+	 */
+	public Thymeleaf setWebContext(Object request, Object response){
 		context.setHttpServletRequestAndResponse(request, response);
 		return this;
 	}
@@ -88,4 +109,10 @@ public abstract class Thymeleaf {
 		return engine.process(template, context.getContext());
 	}
 
+	public enum CONTEXT_TYPE{
+		javaxServlet,
+		jakartaServlet,
+
+		notWeb
+	}
 }

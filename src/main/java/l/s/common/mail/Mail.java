@@ -39,7 +39,7 @@ public class Mail {
         MimeBodyPart bodyPart = new MimeBodyPart();
         bodyPart.setHeader("Content-Type", messageType);
 
-        String content = "";
+        StringBuilder content = new StringBuilder();
         if(this.messageResource != null){
 
             if(this.messageResource.getClass() == InMemoryResource.class){
@@ -51,8 +51,8 @@ public class Mail {
 
             while(sc.hasNextLine()){
                 String line = sc.nextLine();
-                content += line;
-                content += "\n";
+                content.append(line);
+                content.append("\n");
             }
             sc.close();
             reader.close();
@@ -61,9 +61,9 @@ public class Mail {
 
 
         if(this.useThymeleaf){
-            bodyPart.setContent(thymeleaf.process(content), messageType);
+            bodyPart.setContent(thymeleaf.process(content.toString()), messageType);
         }else{
-            bodyPart.setContent(content, messageType);
+            bodyPart.setContent(content.toString(), messageType);
         }
 
         Multipart multiPart = new MimeMultipart();
@@ -105,7 +105,7 @@ public class Mail {
         for(String it : recipients){
             list.add(new InternetAddress(it));
         }
-        message.setRecipients(recipientType, list.toArray(new Address[list.size()]));
+        message.setRecipients(recipientType, list.toArray(new Address[0]));
     }
 
     private void initThymeleaf(){

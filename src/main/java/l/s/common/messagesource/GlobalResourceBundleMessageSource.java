@@ -1,11 +1,7 @@
 package l.s.common.messagesource;
 
-import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.security.core.SpringSecurityMessageSource;
-
 import java.util.List;
-import java.util.Locale;
 
 public class GlobalResourceBundleMessageSource extends ResourceBundleMessageSource {
 

@@ -11,8 +11,7 @@ public class Retry<T>{
 		}
 		for(int i=0;i<times;i++){
 			try{
-				T t = func.function();
-				return t;
+				return func.function();
 			}catch(Exception e){
 				ex = e;
 				
@@ -23,9 +22,8 @@ public class Retry<T>{
 				try {
 					Thread.sleep(sleep);
 				} catch (Exception e1) {
+					//nothing.
 				}
-				
-				continue;
 			}
 		}
 		

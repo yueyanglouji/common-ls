@@ -11,7 +11,7 @@ import l.s.common.util.ReflectUtil;
 
 public class CSVRow {
 
-	private CSVRecord r;
+	private final CSVRecord r;
 	
 	public CSVRow(CSVRecord r){
 		this.r = r;

@@ -25,19 +25,19 @@ public class CSVWrite {
 	
 	public CSVWrite withHeader(String... header){
 		if(header == null){
-			format = format.withHeader(header);
+			format = format.builder().setHeader().build();
 		}
 		else if(header.length == 0){
-			format = format.withHeader();
+			format = format.builder().setHeader().build();
 		}
 		else{
-			format = format.withHeader(header);
+			format = format.builder().setHeader(header).build();
 		}
 		return this;
 	}
 	
 	public CSVWrite withDelimiter(char ch){
-		format = format.withDelimiter(ch);
+		format = format.builder().setDelimiter(ch).build();
 		return this;
 	}
 	
@@ -46,7 +46,7 @@ public class CSVWrite {
 	}
 	
 	public CSVWrite withQuoteMode(QuoteMode mode){
-		format = format.withQuoteMode(mode);
+		format = format.builder().setQuoteMode(mode).build();
 		return this;
 	}
 	

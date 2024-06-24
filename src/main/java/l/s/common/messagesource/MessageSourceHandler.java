@@ -4,7 +4,6 @@ import l.s.common.context.Application;
 import l.s.common.context.Context;
 import l.s.common.context.GlobalContext;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
 

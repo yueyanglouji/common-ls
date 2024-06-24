@@ -7,7 +7,7 @@ public class LambdaSupport {
 
 	private long accumulator;
 	
-	private Map<String, Object> map;
+	private final Map<String, Object> map;
 	
 	public LambdaSupport(){
 		this.map = new HashMap<>();

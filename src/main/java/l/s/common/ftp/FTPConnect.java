@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FTPConnect {
-	private Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	FTPClient client;
 	
@@ -58,7 +58,8 @@ public class FTPConnect {
 			if (client.isConnected()) {  
 	            try {  
 	            	client.disconnect();  
-	            } catch (Exception ioe) {  
+	            } catch (Exception ioe) {
+					// nothing.
 	            }  
 	        }
 			throw e;
@@ -85,7 +86,8 @@ public class FTPConnect {
 			if (client.isConnected()) {  
 	            try {  
 	            	client.disconnect();  
-	            } catch (Exception ioe) {  
+	            } catch (Exception ioe) {
+					//nothing.
 	            }  
 	        }
 			throw e;
@@ -111,15 +113,7 @@ public class FTPConnect {
 	public FTPConnect dowanload(String remotePath, String fileName, OutputStream out) throws Exception{
 		try{
 			client.changeWorkingDirectory(remotePath);
-			FTPFile[] fs = client.listFiles(remotePath, new FTPFileFilter() {
-				@Override
-				public boolean accept(FTPFile file) {
-					if(file.getName().equals(fileName)){  
-						return true;
-			        }  
-					return false;
-				}
-			});
+			FTPFile[] fs = client.listFiles(remotePath, file -> file.getName().equals(fileName));
 			
 			if(fs!=null && fs.length == 1){
 				client.retrieveFile(fileName, out);  
@@ -132,7 +126,8 @@ public class FTPConnect {
 			if (client.isConnected()) {  
 	            try {  
 	            	client.disconnect();  
-	            } catch (Exception ioe) {  
+	            } catch (Exception ioe) {
+					//nothing.
 	            }  
 	        }
 			throw e;
@@ -146,7 +141,8 @@ public class FTPConnect {
 			if (client.isConnected()) {  
 	            try {  
 	            	client.disconnect();  
-	            } catch (Exception ioe) {  
+	            } catch (Exception ioe) {
+					//nothing.
 	            }  
 	        }
 			throw e;

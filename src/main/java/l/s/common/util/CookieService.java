@@ -10,7 +10,7 @@ public class CookieService {
 
 	private static CookieService cookieService;
 	
-	private String path = "cookies.sqlite";
+	private final String path = "cookies.sqlite";
 	
 	private CookieService(boolean reset)throws Exception{
 		
@@ -159,10 +159,6 @@ public class CookieService {
 			
 		}
 		return cookieService;
-	}
-	
-	public static void main(String[] args) throws Exception {
-		System.out.println(CookieService.getInstance().getCookies());
 	}
 }
 

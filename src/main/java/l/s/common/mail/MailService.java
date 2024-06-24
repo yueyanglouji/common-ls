@@ -26,13 +26,11 @@ public class MailService {
             initProps();
         }
 
-        Session session = Session.getDefaultInstance(PROPERTIES);
-        return session;
+        return Session.getDefaultInstance(PROPERTIES);
     }
 
     public MailBuilder getMailBuilder(){
-        MailBuilder builder = new MailBuilder(this);
-        return builder;
+        return new MailBuilder(this);
     }
 
     public void send(Mail mail) throws Exception{

@@ -1,14 +1,8 @@
 package l.s.common.groovy.sql;
 
-import groovy.lang.Writable;
-import groovy.text.StreamingTemplateEngine;
-import groovy.text.Template;
-import l.s.common.groovy.GroovyS;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.Configuration;
-
-import java.util.Map;
 
 public class MybatisGroovyLanguageDriver extends XMLLanguageDriver {
 

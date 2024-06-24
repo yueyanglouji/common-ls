@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class UniDate {
 
-	private static Logger log = LoggerFactory.getLogger(UniDate.class);
+	private static final Logger log = LoggerFactory.getLogger(UniDate.class);
 	
 	private UniDate(){
 		

@@ -3,7 +3,6 @@ package l.s.common.thymeleaf;
 import l.s.common.messagesource.GlobalResourceBundleMessageSource;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
-import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.messageresolver.AbstractMessageResolver;
 import org.thymeleaf.messageresolver.StandardMessageResolver;
@@ -46,6 +45,8 @@ public class TemplateMessageResolver extends AbstractMessageResolver {
                 // Try other methods
             }
 
+        }else{
+            throw new RuntimeException("template context is null.");
         }
 
         final String message =
@@ -53,8 +54,6 @@ public class TemplateMessageResolver extends AbstractMessageResolver {
         if (message != null) {
             return message;
         }
-
-
 
         /*
          * NOT FOUND, return null

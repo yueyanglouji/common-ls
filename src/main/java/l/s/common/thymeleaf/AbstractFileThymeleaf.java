@@ -1,7 +1,5 @@
 package l.s.common.thymeleaf;
 
-import java.util.Map;
-
 public abstract class AbstractFileThymeleaf extends Thymeleaf{
 
 	protected String encoding;
@@ -19,6 +17,13 @@ public abstract class AbstractFileThymeleaf extends Thymeleaf{
 	protected boolean cacheAble;
 
 	public AbstractFileThymeleaf(){
+		this.encoding = "UTF-8";
+		this.suffix = ".html";
+		this.prefix = getWEB_INF_Path();
+	}
+
+	public AbstractFileThymeleaf(CONTEXT_TYPE contextType) {
+		super(contextType);
 		this.encoding = "UTF-8";
 		this.suffix = ".html";
 		this.prefix = getWEB_INF_Path();
@@ -60,6 +65,9 @@ public abstract class AbstractFileThymeleaf extends Thymeleaf{
 		String filePath = AbstractFileThymeleaf.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		if(filePath.indexOf("WEB-INF") > 0) {
 			filePath = filePath.substring(0, filePath.lastIndexOf("WEB-INF"));
+			if(filePath.startsWith("file:/")){
+				filePath = filePath.substring(6);
+			}
 		}
 		return filePath;
 	}

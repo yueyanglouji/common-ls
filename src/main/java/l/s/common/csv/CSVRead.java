@@ -19,7 +19,7 @@ public class CSVRead {
 	}
 	
 	public CSVRead withDelimiter(char ch){
-		format = format.withDelimiter(ch);
+		format = format.builder().setDelimiter(ch).build();
 		return this;
 	}
 	
@@ -28,7 +28,7 @@ public class CSVRead {
 	}
 	
 	public CSVRead withQuoteMode(QuoteMode mode){
-		format = format.withQuoteMode(mode);
+		format = format.builder().setQuoteMode(mode).build();
 		return this;
 	}
 	
@@ -50,8 +50,7 @@ public class CSVRead {
 	
 	public CSVWrite toWrite(){
 		CSVWrite csv = new CSVWrite(format);
-		for(int i=0;i<rows.size();i++){
-			CSVRow row = rows.get(i);
+		for (CSVRow row : rows) {
 			csv.addRow(row.toArray());
 		}
 		

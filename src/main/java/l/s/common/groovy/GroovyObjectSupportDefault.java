@@ -14,10 +14,10 @@ import l.s.common.util.ReflectUtil;
 
 public abstract class GroovyObjectSupportDefault extends GroovyObjectSupport implements DelegateClosure{
 
-	private Map<String, DefaultGroovyObject> fieldmap;
+	private Map<String, DefaultGroovyObject> fieldMap;
 	
 	public GroovyObjectSupportDefault() {
-		fieldmap = new HashMap<>();
+		fieldMap = new HashMap<>();
 	}
 	
 	@Override
@@ -35,7 +35,7 @@ public abstract class GroovyObjectSupportDefault extends GroovyObjectSupport imp
 			newValue = defaultGroovyObject._Value();
 		}
 		
-		DefaultGroovyObject o = fieldmap.get(property);
+		DefaultGroovyObject o = fieldMap.get(property);
 		if(o!=null){
 			o._Value(newValue);
 		}
@@ -50,7 +50,7 @@ public abstract class GroovyObjectSupportDefault extends GroovyObjectSupport imp
 			}
 			DefaultGroovyObject defaultGroovyObject = new DefaultGroovyObject();
 			defaultGroovyObject._Value(newValue);
-			fieldmap.put(property, defaultGroovyObject);
+			fieldMap.put(property, defaultGroovyObject);
 		}
 	}
 
@@ -60,7 +60,7 @@ public abstract class GroovyObjectSupportDefault extends GroovyObjectSupport imp
 		try {
 			o = super.getProperty(property);
 		} catch (MissingPropertyException e) {
-			o = fieldmap.get(property);
+			o = fieldMap.get(property);
 			if(o != null){
 				return o;
 			}
@@ -71,7 +71,7 @@ public abstract class GroovyObjectSupportDefault extends GroovyObjectSupport imp
 				throw e;
 			}
 			DefaultGroovyObject defaultGroovyObject = new DefaultGroovyObject();
-			fieldmap.put(property, defaultGroovyObject);
+			fieldMap.put(property, defaultGroovyObject);
 			o = defaultGroovyObject;
 			return o;
 		}
@@ -125,8 +125,12 @@ public abstract class GroovyObjectSupportDefault extends GroovyObjectSupport imp
 		return super.invokeMethod(name, args);
 	}
 	
-	public DefaultGroovyObject getUndeffinitionField(String property){
+	public DefaultGroovyObject getNoDefinitionField(String property){
 		return (DefaultGroovyObject)getProperty(property);
+	}
+
+	public Map<String, DefaultGroovyObject> getAllNoDefinitionField(){
+		return this.fieldMap;
 	}
 	
 	public Object rightShift(String property){

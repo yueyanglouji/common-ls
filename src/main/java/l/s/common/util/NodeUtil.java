@@ -594,15 +594,4 @@ public class NodeUtil {
 		
 		return new String(out.toByteArray(),"UTF-8");
 	}
-	
-	public static void main(String[] args) throws Exception{
-		NodeUtil util = new NodeUtil(false);
-		Document doc = util.parse(new File("C:/Users/lixiaobao/Desktop/xiaoxisheji/scmonitorCopy/src/dao/jp/co/khi/scm/dao/ibatis/sql/MCategoryUpdateSQL.xml"));
-		
-		System.out.println(util.childToString(doc.getDocumentElement()));
-		
-		
-//		System.out.println("1212<!DOCTYPE sqlMap PUBLIC \"-//ibatis.apache.org//DTD SQL Map 2.0//EN\"\n     \"http://ibatis.apache.org/dtd/sql-map-2.dtd\">41545".replaceFirst("<!DOCTYPE\\s[^>]*>", ""));
-		System.out.println("end");
-	}
 }

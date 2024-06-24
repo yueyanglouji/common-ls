@@ -50,7 +50,7 @@ public class Excel {
         return  ex;
     }
 
-    public static Excel newExcel(int type) throws Exception{
+    public static Excel newExcel(int type){
         Excel ex = new Excel();
         if(type == XLS){
             ex.workbook = new HSSFWorkbook();
@@ -171,7 +171,7 @@ public class Excel {
 
     public String getTextCellValue(int row, int column){
         Cell cell = getCell(row, column);
-        CellType type = cell.getCellType();
+        //CellType type = cell.getCellType();
         return cell.getStringCellValue();
     }
 
@@ -214,11 +214,9 @@ public class Excel {
         }
         else if(type == CellType.NUMERIC){
             if (DateUtil.isCellDateFormatted(cell)) {
-                Date dt = cell.getDateCellValue();
-                return dt;
+                return cell.getDateCellValue();
             } else {
-                double d = cell.getNumericCellValue();
-                return d;
+                return cell.getNumericCellValue();
             }
         }
         else if(type == CellType.BOOLEAN){

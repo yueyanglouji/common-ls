@@ -17,7 +17,26 @@ public final class DefaultGroovyObject extends GroovyObjectSupportDefault{
 		if(property.equals("$")){
 			return _Value();
 		}
+		if(property.startsWith("$")){
+			String field = property.substring(1);
+			DefaultGroovyObject o = (DefaultGroovyObject)super.getProperty(field);
+			return o._Value();
+		}
 		return super.getProperty(property);
+	}
+
+	@Override
+	public void setProperty(String property, Object newValue) {
+		if(property.equals("$")){
+			this._value = newValue;
+		}
+		else if(property.startsWith("$")){
+			String field = property.substring(1);
+			super.setProperty(field, newValue);
+		}
+		else {
+			super.setProperty(property, newValue);
+		}
 	}
 
 	public void _Value(Object value) {

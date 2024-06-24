@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ibatis.builder.SqlSourceBuilder;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ResultMap;
@@ -16,9 +15,11 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
+import javax.sql.DataSource;
+
 public class SqlSessionLocal {
 
-	private static ThreadLocal<SqlSession> threadLocal = new ThreadLocal<SqlSession>();
+	private static final ThreadLocal<SqlSession> threadLocal = new ThreadLocal<SqlSession>();
 	
 	private SqlSession getSession(){
 		SqlSession session = threadLocal.get();
@@ -29,7 +30,7 @@ public class SqlSessionLocal {
 		return session;
 	}
 	
-	private SqlSessionFactory factory;
+	private final SqlSessionFactory factory;
 	
 	private boolean autoCommit = true;
 	
@@ -38,9 +39,8 @@ public class SqlSessionLocal {
 		return getSession();
 	}
 	
-	public SqlSessionLocal newInstance(BasicDataSource dataSource, boolean autoCommit){
-		SqlSessionLocal session = MybatisSqlSessionLocalBuilder.build(dataSource, autoCommit);
-		return session;
+	public SqlSessionLocal getNewInstance(DataSource dataSource, boolean autoCommit){
+		return MybatisSqlSessionLocalBuilder.build(dataSource, autoCommit);
 	}
 	
 	private SqlSessionLocal(SqlSessionFactory f, boolean autoCommit){
@@ -49,8 +49,7 @@ public class SqlSessionLocal {
 	}
 	
 	public static SqlSessionLocal _init(SqlSessionFactory f, boolean autoCommit){
-		SqlSessionLocal local = new SqlSessionLocal(f, autoCommit);
-		return local;
+		return new SqlSessionLocal(f, autoCommit);
 	}
 	
 	public boolean hasStatement(String statement){
@@ -77,7 +76,7 @@ public class SqlSessionLocal {
 		else if(sql.toLowerCase().startsWith("update")){
 			type = SqlCommandType.UPDATE;
 		}
-		else if(sql.toLowerCase().startsWith("select")){
+		else if(sql.toLowerCase().startsWith("select") | sql.toLowerCase().startsWith("show")){
 			type = SqlCommandType.SELECT;
 		}
 		else if(sql.toLowerCase().startsWith("delete")){
@@ -110,27 +109,52 @@ public class SqlSessionLocal {
 		}
 		
 	}
-	
+
+	public int insert(String statement){
+
+		return getSession().insert(statement);
+	}
+
 	public int insert(String statement, Map<String, Object> param){
 		
 		return getSession().insert(statement, param);
 	}
-	
+
+	public int update(String statement){
+
+		return getSession().update(statement);
+	}
+
 	public int update(String statement, Map<String, Object> param){
 		
 		return getSession().update(statement, param);
+	}
+
+	public int delete(String statement){
+
+		return getSession().delete(statement);
 	}
 	
 	public int delete(String statement, Map<String, Object> param){
 		
 		return getSession().delete(statement, param);
 	}
-	
-	public List<Map<String, Object>> selectList(String statement, Map<String, Object> param){
+
+	public <T> List<T> selectList(String statement){
+
+		return getSession().selectList(statement);
+	}
+
+	public <T> List<T> selectList(String statement, Map<String, Object> param){
 		
 		return getSession().selectList(statement, param);
 	}
-	
+
+	public <T> T selectOne(String statement){
+
+		return getSession().selectOne(statement);
+	}
+
 	public <T> T selectOne(String statement, Map<String, Object> param){
 		
 		return getSession().selectOne(statement, param);
@@ -146,5 +170,6 @@ public class SqlSessionLocal {
 	
 	public void close(){
 		getSession().close();
+		threadLocal.set(null);
 	}
 }

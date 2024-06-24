@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -14,21 +15,16 @@ public class ReflectUtil {
 
 	/**
 	 * 一次寻找子类 和超类中的方法 未找到则返回null;
-	 * 
-	 * @param cl
-	 * @param methodName
-	 * @param parameterTypes
-	 * @return
 	 */
 	public Method getDeclaredMethod(Class<?> cl, String methodName,
 			Class<?>... parameterTypes) {
 
 		do {
 			try {
-				Method method = cl
+				return cl
 						.getDeclaredMethod(methodName, parameterTypes);
-				return method;
 			} catch (Exception e) {
+				// nothing.
 			}
 		} while ((cl = cl.getSuperclass()) != null);
 
@@ -37,11 +33,6 @@ public class ReflectUtil {
 
 	/**
 	 * 一次寻找子类 和超类中的方法 未找到则返回null;
-	 * 
-	 * @param cl
-	 * @param methodName
-	 * @param parameterTypes
-	 * @return
 	 */
 	public List<Method> getDeclaredMethods(Class<?> cl) {
 		List<Method> list = new ArrayList<>();
@@ -49,11 +40,10 @@ public class ReflectUtil {
 			try {
 				Method[] methods = cl.getDeclaredMethods();
 				if(methods!=null){
-					for(int i=0;i<methods.length;i++){
-						list.add(methods[i]);
-					}
+					list.addAll(Arrays.asList(methods));
 				}
 			} catch (Exception e) {
+				// nothing.
 			}
 		} while ((cl = cl.getSuperclass()) != null);
 
@@ -62,9 +52,6 @@ public class ReflectUtil {
 	
 	/**
 	 * 获取所有子类 父类中的属性，如果子类父类中有同名的属性，子类的field会优先于父类属性，排在返回值Filed[]数组中的前面。
-	 * 
-	 * @param cl
-	 * @return
 	 */
 	public Field[] getDeclaredFields(Class<?> cl) {
         List<Field> list = new ArrayList<Field>();
@@ -74,10 +61,9 @@ public class ReflectUtil {
 				if (field == null) {
 					continue;
 				}
-				for (int i = 0; i < field.length; i++) {
-					list.add(field[i]);
-				}
+				list.addAll(Arrays.asList(field));
 			} catch (Exception e) {
+				// nothing.
 			}
 		} while ((cl = cl.getSuperclass()) != null);
 		if (list.size() == 0) {
@@ -92,9 +78,9 @@ public class ReflectUtil {
 
 		do {
 			try {
-				Field field = cl.getDeclaredField(fieldName);
-				return field;
+				return cl.getDeclaredField(fieldName);
 			} catch (Exception e) {
+				//nothing.
 			}
 		} while ((cl = cl.getSuperclass()) != null);
 

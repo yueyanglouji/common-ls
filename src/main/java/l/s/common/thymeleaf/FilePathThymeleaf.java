@@ -4,6 +4,13 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 public class FilePathThymeleaf extends AbstractFileThymeleaf{
+	public FilePathThymeleaf() {
+		super();
+	}
+
+	public FilePathThymeleaf(CONTEXT_TYPE contextType) {
+		super(contextType);
+	}
 
 	@Override
 	protected void setTemplateResolver(TemplateMode model) {
@@ -17,6 +24,7 @@ public class FilePathThymeleaf extends AbstractFileThymeleaf{
 		engine.setTemplateResolver(resolver);
 	}
 
+	@Override
 	public FilePathThymeleaf setVariable(String name, Object value){
 
 		context.setVariable(name, value);

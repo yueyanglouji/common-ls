@@ -3,21 +3,21 @@ package l.s.common.quartz;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class QuartZBlock implements QuartZBlockRunable{
+public abstract class QuartZBlock implements QuartZBlockRunnable{
 
-	private Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	boolean b;
 	
-	long complateTimes;
+	long completeTimes;
 	
 	@Override
-	public final boolean isRuning() {
+	public final boolean isRunning() {
 		return b;
 	}
 	
-	public long getComplateTimes(){
-		return complateTimes;
+	public long getCompleteTimes(){
+		return completeTimes;
 	}
 	
 	Object result;
@@ -34,7 +34,7 @@ public abstract class QuartZBlock implements QuartZBlockRunable{
 	@Override
 	public final void run() {
 		if(b){
-			log.debug("runing...   =>skip this thread");
+			log.debug("running...   =>skip this thread");
 			return;
 		}
 		
@@ -44,7 +44,7 @@ public abstract class QuartZBlock implements QuartZBlockRunable{
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		complateTimes ++;
+		completeTimes ++;
 		b = false;
 	}
 	

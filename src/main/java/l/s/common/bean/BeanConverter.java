@@ -29,7 +29,7 @@ public class BeanConverter {
 	
 	public BeanConverter(){
 		service = new DefaultConversionService();
-		
+
 		addConverter(new Converter<Date, String>() {
 			@Override
 			public String convert(Date source) {
@@ -37,7 +37,7 @@ public class BeanConverter {
 				return f.format(source);
 			}
 		});
-		
+
 		addConverter(new Converter<String, Date>() {
 			@Override
 			public Date convert(String source) {
@@ -49,7 +49,7 @@ public class BeanConverter {
 				}
 			}
 		});
-		
+
 		addConverter(new Converter<LocalDateTime, String>() {
 			@Override
 			public String convert(LocalDateTime source) {
@@ -57,7 +57,7 @@ public class BeanConverter {
 				return zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 			}
 		});
-		
+
 		addConverter(new Converter<String, LocalDateTime>() {
 			@Override
 			public LocalDateTime convert(String source) {
@@ -65,14 +65,14 @@ public class BeanConverter {
 				return DateUtil.toLocalDateTime(zdt);
 			}
 		});
-		
+
 		addConverter(new Converter<ZonedDateTime, String>() {
 			@Override
 			public String convert(ZonedDateTime source) {
 				return source.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 			}
 		});
-		
+
 		addConverter(new Converter<String, ZonedDateTime>() {
 			@Override
 			public ZonedDateTime convert(String source) {
@@ -80,28 +80,28 @@ public class BeanConverter {
 				return zdt;
 			}
 		});
-		
+
 		addConverter(new Converter<LocalDate, String>() {
 			@Override
 			public String convert(LocalDate source) {
 				return source.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 			}
 		});
-		
+
 		addConverter(new Converter<String, LocalDate>() {
 			@Override
 			public LocalDate convert(String source) {
 				return LocalDate.parse(source, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 			}
 		});
-		
+
 		addConverter(new Converter<LocalTime, String>() {
 			@Override
 			public String convert(LocalTime source) {
 				return source.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
 			}
 		});
-		
+
 		addConverter(new Converter<String, LocalTime>() {
 			@Override
 			public LocalTime convert(String source) {
@@ -110,11 +110,11 @@ public class BeanConverter {
 		});
 	}
 	
-	public void addConverter(@SuppressWarnings("rawtypes") Converter converter){
+	public void addConverter(Converter<?, ?> converter){
 		service.addConverter(converter);
 	}
 
-	public void addConverter(Class<?> sourceType, Class<?> targetType, Converter converter){
+	public<S, T> void addConverter(Class<S> sourceType, Class<T> targetType, Converter<? super S, ? extends T> converter){
 		service.addConverter(sourceType, targetType, converter);
 	}
 	
@@ -122,7 +122,7 @@ public class BeanConverter {
 		return service.convert(source, targetType);
 	}
 	
-	public boolean canConvert(Object source, @SuppressWarnings("rawtypes") Class targetType){
+	public boolean canConvert(Object source, Class<?> targetType){
 		return service.canConvert(source.getClass(), targetType);
 	}
 	

@@ -28,7 +28,6 @@ public class CutImageU {
 	 * 			args[0] methodName. 
 	 * 			args[1] filePath. 
 	 * 			args[...] methodArgs.
-	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception{
 		ImageReader reader = ImageIO.getImageReadersBySuffix("jpg").next();
@@ -162,13 +161,13 @@ public class CutImageU {
 	/** 
      * 图像缩放 jpg格式 
      *  
-     * @param imgsrc 
+     * @param filePath
      *            :原图片文件路径 
-     * @param imgdist 
+     * @param outfilePath
      *            :生成的缩略图片文件路径 
-     * @param widthdist 
+     * @param width
      *            :生成图片的宽度 
-     * @param heightdist 
+     * @param height
      *            :生成图片的高度 
      */  
     public WritableRaster reduceImg(ImageReader reader,String filePath,String outfilePath,int width,int height)throws Exception{

@@ -12,6 +12,10 @@ public class StringContentThymeleaf extends Thymeleaf{
 
 	}
 
+	public StringContentThymeleaf(CONTEXT_TYPE contextType) {
+		super(contextType);
+	}
+
 	@Override
 	protected void setTemplateResolver(TemplateMode model) {
 		StringTemplateResolver resolver = new StringTemplateResolver();
@@ -19,6 +23,7 @@ public class StringContentThymeleaf extends Thymeleaf{
 		engine.setTemplateResolver(resolver);
 	}
 
+	@Override
 	public StringContentThymeleaf setVariable(String name, Object value){
 
 		context.setVariable(name, value);
@@ -39,15 +44,15 @@ public class StringContentThymeleaf extends Thymeleaf{
 
 	public String processStream(InputStream in, String charset) throws Exception{
 		Scanner sc = new Scanner(new InputStreamReader(in, charset));
-		String content = "";
+		StringBuilder content = new StringBuilder();
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
-			content += line;
-			content += "\n";
+			content.append(line);
+			content.append("\n");
 		}
 		sc.close();
 		in.close();
 
-		return process(content);
+		return process(content.toString());
 	}
 }

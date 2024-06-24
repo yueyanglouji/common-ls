@@ -8,7 +8,7 @@ public class ServletContext implements Serializable{
 	
 	private static final long serialVersionUID = -258225202843561999L;
 
-	private static ThreadLocal<ServletContext> servletContext = new ThreadLocal<ServletContext>();
+	private static final ThreadLocal<ServletContext> servletContext = new ThreadLocal<>();
 	
 	private Map<String, Object> headers;
 	
@@ -23,12 +23,12 @@ public class ServletContext implements Serializable{
 	private Object responseEntity;
 	
 	private ServletContext(){
-		this.headers = new HashMap<String, Object>();
-		this.parameters = new HashMap<String, Object>();
+		this.headers = new HashMap<>();
+		this.parameters = new HashMap<>();
 	}
 	
 	public static ServletContext getContext() {
-		if(servletContext == null || servletContext.get() == null){
+		if(servletContext.get() == null){
 			servletContext.set(new ServletContext());
 		}
         return servletContext.get();

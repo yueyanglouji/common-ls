@@ -47,14 +47,5 @@ public final class DefaultGroovyDeffinitionObject<T> extends GroovyObjectSupport
 	public static <T> DefaultGroovyDeffinitionObject<T> newInstance(Class<T> c){
 		return new DefaultGroovyDeffinitionObject<>(c);
 	}
-	
-	public static void main(String[] args) {
-		DefaultGroovyDeffinitionObject<String> s = DefaultGroovyDeffinitionObject.newInstance(String.class);
-		
-		String abc = s.getProperty("abc");
-		System.out.println(abc);
-		
-	}
-	
 
 }

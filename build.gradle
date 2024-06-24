@@ -2,9 +2,6 @@ defaultTasks 'clean', 'deploy'
 
 //apply plugin:'java'
 apply plugin: 'groovy'
-apply plugin:'eclipse'
-apply plugin:'maven'
-apply plugin: 'idea'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
@@ -34,12 +31,8 @@ sourceSets {
 }
 
 configurations {
-    compile {
-        description = 'compile classpath'
-        transitive = true
-    }
     runtime {
-        extendsFrom compile
+        extendsFrom implementation
     }
 
 	all*.exclude module: 'jcl104-over-slf4j'
@@ -47,146 +40,108 @@ configurations {
 	removeOnBuildEclipse
 }
 
+buildscript {
+	repositories {
+		maven{
+			url "https://repo.yokogawa.work/repository/maven-yokogawa-release/"
+		}
+	}
+}
 repositories {
-	//maven{
-	//	url 'http://nexus.s01.kdc/content/groups/public/'
-	//}
-    mavenCentral()
+	maven{
+		url "https://repo.yokogawa.work/repository/maven-yokogawa-release/"
+	}
 }
 
 dependencies {
-	compile group: 'ch.qos.logback', name: 'logback-classic', version: '+'
-	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta0'
-	compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.8.0-beta0'
-	compile 'org.springframework:spring-context:+'
-	compile group: 'org.springframework', name: 'spring-context-support', version: '+'
+	implementation 'org.slf4j:slf4j-api:2.0.7'
+	implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0'
+	implementation 'org.springframework:spring-context:5.3.18'
+
+	implementation group: 'org.springframework', name: 'spring-context-support', version: '5.3.18'
+
+	implementation 'org.json:json:+'
+	implementation 'org.noggit:noggit:+'
+
+	implementation 'commons-dbcp:commons-dbcp:+'
+	implementation group: 'com.mysql', name: 'mysql-connector-j', version: '8.2.0'
+	implementation 'org.xerial:sqlite-jdbc:+'
+	implementation group: 'org.mybatis', name: 'mybatis-spring', version: '+'
+	implementation group: 'org.mybatis', name: 'mybatis-typehandlers-jsr310', version: '+'
+
+	implementation 'org.mybatis:mybatis:+'
+	implementation 'org.springframework:spring-jdbc:5.3.18'
+
+	implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.2.1'
+
+	implementation 'org.jsoup:jsoup:+'
+
+	implementation group: 'org.aspectj', name: 'aspectjrt', version: '+'
+	implementation group: 'org.aspectj', name: 'aspectjweaver', version: '+'
+	implementation 'javax.mail:mail:+'
+	implementation 'org.apache.velocity:velocity:+'
 	
-	compile 'org.json:json:+'
-	compile 'org.noggit:noggit:+'
-	compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.2'
-	compile group: 'junit', name: 'junit', version: '+'
-	
-	compile 'commons-dbcp:commons-dbcp:+'
-	compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.8-dmr'
-	compile 'org.xerial:sqlite-jdbc:+'
-	compile group: 'org.mybatis', name: 'mybatis-spring', version: '+'
-	compile group: 'org.mybatis', name: 'mybatis-typehandlers-jsr310', version: '+'
-	
-	compile 'org.mybatis:mybatis:+'
-	compile 'org.springframework:spring-jdbc:+'
-    compile 'org.apache.httpcomponents:httpclient:+'
-	compile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '+'
-	
-	compile group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '+'
-	compile group: 'org.apache.httpcomponents.client5', name: 'httpclient5-fluent', version: '+'
-	
-	
-    compile 'org.jsoup:jsoup:+'
-	
-	compile group: 'org.aspectj', name: 'aspectjrt', version: '+'
-	compile group: 'org.aspectj', name: 'aspectjweaver', version: '+'
-	compile 'javax.mail:mail:+'
-	compile 'org.apache.velocity:velocity:+'
-	
-	// https://mvnrepository.com/artifact/org.apache.ant/ant
-	compile group: 'org.apache.ant', name: 'ant', version: '+'
-	// https://mvnrepository.com/artifact/org.samba.jcifs/jcifs
-	compile group: 'org.samba.jcifs', name: 'jcifs', version: '+'
-	
-	compile 'org.springframework.security:spring-security-core:+'
-	// https://mvnrepository.com/artifact/org.apache.commons/commons-csv
-	compile group: 'org.apache.commons', name: 'commons-csv', version: '+'
+	implementation group: 'org.apache.ant', name: 'ant', version: '+'
+	implementation group: 'org.samba.jcifs', name: 'jcifs', version: '+'
+
+	implementation 'org.springframework.security:spring-security-core:5.6.2'
+	implementation group: 'org.apache.commons', name: 'commons-csv', version: '+'
 
 	// ftp dependency
-	compile group: 'commons-net', name: 'commons-net', version: '+'
+	implementation group: 'commons-net', name: 'commons-net', version: '3.8.0'
 
-	// https://mvnrepository.com/artifact/org.apache.poi/poi
-	compile group: 'org.apache.poi', name: 'poi', version: '+'
-	// https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
-	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '+'
+	implementation group: 'org.apache.poi', name: 'poi', version: '+'
+	implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '+'
 
-	// https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf
-	compile group: 'org.thymeleaf', name: 'thymeleaf', version: '+'
+	implementation group: 'org.thymeleaf', name: 'thymeleaf', version: '+'
 
-	// https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring4
-	compile group: 'org.thymeleaf', name: 'thymeleaf-spring4', version: '+'
+	implementation group: 'org.thymeleaf', name: 'thymeleaf-spring5', version: '+'
 
-	// https://mvnrepository.com/artifact/org.quartz-scheduler/quartz
-	compile group: 'org.quartz-scheduler', name: 'quartz', version: '+'
+	implementation group: 'org.quartz-scheduler', name: 'quartz', version: '2.3.2'
 
-	// https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-	compile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+	implementation group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+	implementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
 
+	implementation group: 'org.jboss.modules', name: 'jboss-modules', version: '2.0.3.Final'
+	implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.14'
+	implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+	implementation 'org.apache.groovy:groovy:4.0.17'
+
+	testImplementation 'io.netty:netty-all:4.1.109.Final'
 }
 
-
-version = 1.0
-
-//compileJava{
-//	options.encoding = 'UTF-8'
-//	classpath = configurations.compile
-//}
+group 'com.woyouyigegushi.common-ls'
+//version '1.0.5-SNAPSHOT'
+version '1.0.5'
 
 compileGroovy{
 	options.encoding = 'UTF-8'
-	classpath = configurations.compile
+	classpath = configurations.runtime
 }
 
 def mainclass = properties["manifest.mainclass"];
 jar{
  	manifest {
-        attributes 'Main-Class': mainclass;
-        attributes 'Class-Path': "./ " + configurations.runtime.findAll {it.getName().endsWith('.jar') }.collect { "lib/${it.getName()}" }.join(' ')
+        //attributes 'Main-Class': mainclass;
+        //attributes 'Class-Path': "./ " + configurations.runtime.findAll {it.getName().endsWith('.jar') }.collect { "lib/${it.getName()}" }.join(' ')
     }
     
     exclude "*.properties"
 }
 
-
-uploadArchives {
-    repositories {
-        flatDir {
-            dirs 'repos'
-        }
-    }
-}
-
 task copylib {
-
 	doLast{
-		def dir = file("./repos/lib")
+		def dir = file("/repos/lib")
 		if(!dir.exists()){
 			dir.mkdirs();
 		}
-		
+
 		copy{
+			println("copy")
 			from configurations.runtime.findAll {it.getName().endsWith('.jar') }
 			into dir
 		}
-	}
-}
-
-clean{
-	doFirst{
-		fileTree('repos').each{
-			it.delete()
-		}
-		file('repos').delete();
-		print "repos dir delete."
-	}
-}
-
-task deploy(dependsOn:[jar,uploadArchives,copylib]) {
-	doLast{
-	
-	}
-}
-
-	
-task undeploy(dependsOn:clean) {
-	doLast{
-	
 	}
 }
 
@@ -197,12 +152,3 @@ task llast {
 }
 
 tasks.findAll{it.name != 'llast'}.each{it.finalizedBy llast}
-
-eclipse {
-  classpath {
-	minusConfigurations += [configurations.removeOnBuildEclipse]
-    downloadSources = true
-    downloadJavadoc = false
-  }
-}
-

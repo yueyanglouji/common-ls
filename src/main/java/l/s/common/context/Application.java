@@ -12,7 +12,7 @@ public class Application {
     }
 
     public static void setContext(Context context) {
-        context = context;
+        Application.context = context;
     }
 
 }
