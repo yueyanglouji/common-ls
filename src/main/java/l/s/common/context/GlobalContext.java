@@ -10,7 +10,7 @@ public class GlobalContext extends Context implements Serializable{
 	private static GlobalContext context;
 
 	private GlobalContext(){
-		super(null);
+		super();
 	}
 	
 	public static GlobalContext getContext() {

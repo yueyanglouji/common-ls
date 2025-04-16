@@ -15,7 +15,9 @@ public class Request {
 	private final RequestHeader header;
 	
 	private final RequestParam param;
-	
+
+	private final RequestParam urlParam;
+
 	private final HttpUpInputPutStream stream;
 	
 	private URL url;
@@ -35,6 +37,8 @@ public class Request {
 		this.header = new RequestHeader();
 
 		this.param = new RequestParam();
+
+		this.urlParam = new RequestParam();
 
 		this.stream = new HttpUpInputPutStream();
 	}
@@ -57,6 +61,10 @@ public class Request {
 
 	public void addParam(String key, String value){
 		this.param.addParam(key, value);
+	}
+
+	public void addUrlParam(String key, String value){
+		this.urlParam.addParam(key, value);
 	}
 	
 	public void stream(String txt) throws Exception{
@@ -129,5 +137,8 @@ public class Request {
 	public RequestParam getParam() {
 		return this.param;
 	}
-	
+
+	public RequestParam getUrlParam() {
+		return urlParam;
+	}
 }

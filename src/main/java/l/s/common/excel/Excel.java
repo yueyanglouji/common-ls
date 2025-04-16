@@ -1,15 +1,22 @@
 package l.s.common.excel;
 
 import l.s.common.bean.BeanConverter;
+import l.s.common.util.IoUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,28 +33,68 @@ public class Excel {
 
     Sheet activeSheet;
 
+    File file;
+
     public static Excel open(InputStream in) throws Exception{
-        Excel ex = new Excel();
-        ex.workbook = WorkbookFactory.create(in);
-        return  ex;
+        try {
+            byte[] bytes = readStream(in);
+            return open(bytes);
+        }finally {
+            IoUtil.close(in);
+        }
     }
 
     public static Excel open(InputStream in, String password) throws Exception{
-        Excel ex = new Excel();
-        ex.workbook = WorkbookFactory.create(in, password);
-        return  ex;
+        try {
+            byte[] bytes = readStream(in);
+            return open(bytes, password);
+        }finally {
+            IoUtil.close(in);
+        }
     }
 
     public static Excel open(File f) throws Exception{
-        Excel ex = new Excel();
-        ex.workbook = WorkbookFactory.create(f);
-        return  ex;
+        try (
+                InputStream in = Files.newInputStream(f.toPath())
+        ){
+            byte[] bytes = readStream(in);
+            Excel excel =  open(bytes);
+            excel.file = f;
+            return excel;
+        }
     }
 
     public static Excel open(File f, String password) throws Exception{
+        try (
+                InputStream in = Files.newInputStream(f.toPath())
+        ){
+            byte[] bytes = readStream(in);
+            Excel excel =  open(bytes, password);
+            excel.file = f;
+            return excel;
+        }
+    }
+
+    public static Excel open(byte[] byteArray) throws Exception{
         Excel ex = new Excel();
-        ex.workbook = WorkbookFactory.create(f, password);
+        ex.workbook = WorkbookFactory.create(new ByteArrayInputStream(byteArray));
         return  ex;
+    }
+
+    public static Excel open(byte[] byteArray, String password) throws Exception{
+        Excel ex = new Excel();
+        ex.workbook = WorkbookFactory.create(new ByteArrayInputStream(byteArray), password);
+        return  ex;
+    }
+
+    private static byte[] readStream(InputStream in) throws Exception{
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int n = -1;
+        while ((n = in.read(buffer)) > 0){
+            out.write(buffer, 0, n);
+        }
+        return out.toByteArray();
     }
 
     public static Excel newExcel(int type){
@@ -58,6 +105,14 @@ public class Excel {
             ex.workbook = new XSSFWorkbook();
         }
         return  ex;
+    }
+
+    public int getNumberOfSheets(){
+        return workbook.getNumberOfSheets();
+    }
+
+    public String getSheetName(int index){
+        return workbook.getSheetName(index);
     }
 
     public Excel sheet(int index){
@@ -71,7 +126,14 @@ public class Excel {
     }
 
     public Excel createSheet(String name){
+        return createSheet(name, -1);
+    }
+
+    public Excel createSheet(String name, int pos){
         this.activeSheet = this.workbook.createSheet(name);
+        if(pos >= 0){
+            this.workbook.setSheetOrder(name, pos);
+        }
         return this;
     }
 
@@ -96,7 +158,10 @@ public class Excel {
 
     public Excel setCellValueDate(int row, int column, Date value, String format){
         Cell cell = getCell(row, column);
-        CellStyle cellStyle = workbook.createCellStyle();
+        CellStyle cellStyle = cell.getCellStyle();
+        if(cellStyle == null){
+            cellStyle = workbook.createCellStyle();
+        }
         CreationHelper createHelper = workbook.getCreationHelper();
         cellStyle.setDataFormat(createHelper.createDataFormat().getFormat(format));
         cell.setCellValue(value);
@@ -130,6 +195,11 @@ public class Excel {
             r = this.activeSheet.createRow(row);
         }
         return r;
+    }
+
+    public Excel copyRow(int row, int toRow){
+        CopyRow.copyRow(this.workbook, this.activeSheet, row, toRow);
+        return this;
     }
 
     public Cell getCell(String cell){
@@ -300,9 +370,18 @@ public class Excel {
         return this;
     }
 
+    public Excel save() throws Exception{
+        if(file == null){
+            throw new RuntimeException("Not read from a file.");
+        }
+        saveAs(file);
+        return this;
+    }
+
     private int numberColumn(String cell)
     {
-        Pattern p = Pattern.compile("^[A-Z]+");
+        String regex = "^[A-Z]+";
+        Pattern p = Pattern.compile(regex);
         Matcher m = p.matcher(cell.toUpperCase());
         m.find();
         String row = m.group();
@@ -321,10 +400,186 @@ public class Excel {
 
     private int numberRow(String cell)
     {
-        Pattern p = Pattern.compile("[0-9]+$");
+        String regex = "[0-9]+$";
+        Pattern p = Pattern.compile(regex);
         Matcher m = p.matcher(cell.toUpperCase());
         m.find();
         String row = m.group();
         return Integer.parseInt(row) - 1;
+    }
+
+    public String getFooter(FooterType footerType){
+        Footer foo = this.activeSheet.getFooter();
+        if(footerType == FooterType.LEFT){
+            return foo.getLeft();
+        }else if(footerType == FooterType.RIGHT){
+            return foo.getRight();
+        }else if(footerType == FooterType.CENTER){
+            return foo.getCenter();
+        }else {
+            throw new RuntimeException("Not support FooterType");
+        }
+    }
+
+    public Excel setFooter(String footer, FooterType footerType){
+        Footer foo = this.activeSheet.getFooter();
+        if(footerType == FooterType.LEFT){
+            foo.setLeft(footer);
+        }else if(footerType == FooterType.RIGHT){
+            foo.setRight(footer);
+        }else if(footerType == FooterType.CENTER){
+            foo.setCenter(footer);
+        }
+        return this;
+    }
+
+    public Excel setPrintRange(int r0, int c0, int rn, int cn){
+        int sheetIndex = this.workbook.getSheetIndex(this.activeSheet);
+        this.workbook.setPrintArea(sheetIndex ,c0, cn, r0, rn);
+        return this;
+    }
+
+    public Excel formula(int row, int column, String formula){
+        Cell cell = this.getCell(row, column);
+        CellStyle cellStyle = cell.getCellStyle();
+        if(cellStyle == null){
+            cellStyle = workbook.createCellStyle();
+        }
+        cell.setCellFormula(formula);
+        cell.setCellStyle(cellStyle);
+        return this;
+    }
+
+    public Excel formulaEvaluate(int row, int column){
+        FormulaEvaluator formulaEvaluator = this.workbook.getCreationHelper().createFormulaEvaluator();
+        formulaEvaluator.evaluate(this.getCell(row, column));
+        return this;
+    }
+
+    public Excel formulaEvaluateAll(){
+        this.workbook.getCreationHelper().createFormulaEvaluator().evaluateAll();
+        return this;
+    }
+
+    /**
+     * Include image in the Excel.
+     * @param image image bytes
+     * @param type image type
+     * @param row row index
+     * @param column column index
+     * @param scaleWidth number of columns to use for this image. If this number is less than 0, then the scaleWith will be automatically calculated.
+     * @param scaleHeight number of rows to use for this image. If this number is less than 0, then the scaleHeight will be automatically calculated.
+     * @return this
+     * @throws IOException * @throws IOException
+     */
+    public Excel image(byte[] image, PICTURE_TYPE type, int row, int column, double scaleWidth, double scaleHeight) throws IOException {
+        if(scaleWidth <=0 && scaleHeight <= 0){
+            image(image, type, row, column);
+        }
+
+        if(scaleWidth <= 0 || scaleHeight <= 0){
+            BufferedImage read = ImageIO.read(new ByteArrayInputStream(image));
+            int width1 = read.getWidth();
+            int height1 = read.getHeight();
+
+            int width2 = this.activeSheet.getColumnWidth(column);
+            int height2 = getRow(row).getHeight();
+
+            if(scaleWidth <= 0){
+                scaleWidth = scaleHeight * height2 / (double)height1 * width1 / (double)width2;
+            }
+            else {
+                scaleHeight = scaleWidth * width2 / (double)width1 * height1 / (double)height2;
+            }
+        }
+
+        Picture pict = makePictrue(image, type, row, column);
+        pict.resize(scaleWidth, scaleHeight);
+        return this;
+    }
+
+    @Deprecated
+    public Excel image(byte[] image, PICTURE_TYPE type, int row, int column, int width, int height, boolean useWidth) throws IOException {
+        if(width <=0 && height <= 0){
+            image(image, type, row, column);
+        }
+
+        int width2 = this.activeSheet.getColumnWidth(column);
+        int height2 = getRow(row).getHeight();
+
+        double scaleWidth;
+        double scaleHeight;
+        if(width <= 0){
+            scaleWidth = -1;
+            scaleHeight = height / (double)height2;
+        }
+        else if(height <= 0){
+            scaleWidth = width / (double)width2;
+            scaleHeight = -1;
+        }else{
+            scaleWidth = width / (double)width2;
+            scaleHeight = height / (double)height2;
+        }
+        image(image, type, row, column, scaleWidth, scaleHeight);
+        return this;
+    }
+
+    public Excel image(byte[] image, PICTURE_TYPE type, int row, int column) throws IOException {
+        Picture pict = makePictrue(image, type, row, column);;
+        pict.resize();
+        return this;
+    }
+
+    private Picture makePictrue(byte[] image, PICTURE_TYPE type, int row, int column) {
+        final CreationHelper helper = workbook.getCreationHelper();
+        final Drawing<?> drawing = activeSheet.createDrawingPatriarch();
+
+        final ClientAnchor anchor = helper.createClientAnchor();
+        anchor.setAnchorType( ClientAnchor.AnchorType.MOVE_AND_RESIZE );
+
+
+        final int pictureIndex = workbook.addPicture(image, type.value);
+
+        anchor.setRow1( row );
+        anchor.setCol1( column );
+        anchor.setRow2( row + 1 );
+        anchor.setCol2( column + 1 );
+        return drawing.createPicture( anchor, pictureIndex );
+    }
+
+    public Excel setRowHeight(int row, short height){
+        Row r = this.getRow(row);
+        r.setHeight(height);
+        return this;
+    }
+
+    public SheetConditionalFormatting rules(){
+        return this.activeSheet.getSheetConditionalFormatting();
+    }
+
+    public enum PICTURE_TYPE{
+        /** Mac EMF format */
+        PICTURE_TYPE_EMF(2),
+
+        /** Windows Meta File */
+        PICTURE_TYPE_WMF(3),
+
+        /** Mac PICT format */
+        PICTURE_TYPE_PICT(4),
+
+        /** JPEG format */
+        PICTURE_TYPE_JPEG(5),
+
+        /** PNG format */
+        PICTURE_TYPE_PNG(6),
+
+        /** Device independent bitmap */
+        PICTURE_TYPE_DIB(7);
+
+        int value = 6;
+
+        PICTURE_TYPE(int value){
+            this.value = value;
+        }
     }
 }

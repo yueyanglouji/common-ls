@@ -18,9 +18,9 @@ public class Http2Client extends HttpClient {
 	Http2Client(CloseableHttpAsyncClient client, Timeout connectTimeout, Timeout responseTimeout,
 				String defaultRequestCharset, String defaultResponseCharset,
 				HttpVersion defaultHttpVersion, RequestHeader defaultHeaders,
-				CookieStore cookieStore, CredentialsStore credentialsStore, HttpRoutePlanner routePlanner){
+				CookieStore cookieStore, CredentialsStore credentialsStore, HttpRoutePlanner routePlanner, int retryTimes){
 		super(connectTimeout, responseTimeout, defaultRequestCharset, defaultResponseCharset, defaultHttpVersion,
-				defaultHeaders, cookieStore, credentialsStore, routePlanner);
+				defaultHeaders, cookieStore, credentialsStore, routePlanner, retryTimes);
 
 		this.client = client;
 		this.async = Async2.newInstance();

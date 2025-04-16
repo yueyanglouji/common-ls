@@ -30,10 +30,8 @@ public class FileContentThymeleaf extends AbstractFileThymeleaf{
 	}
 
 	@Override
-	public FileContentThymeleaf setVariable(String name, Object value){
-
-		context.setVariable(name, value);
-		return this;
+	public FileContentThymeleafExecutor createExecutor() {
+		return new FileContentThymeleafExecutor(this.contextType, this.engine, this.locale, this);
 	}
 
 	public String getFileContent(String template) throws Exception{
@@ -74,17 +72,8 @@ public class FileContentThymeleaf extends AbstractFileThymeleaf{
 		}
 	}
 
-	public boolean hasImportThTag(String template) throws Exception{
+	public boolean hasImportThTagInHtml(String template) throws Exception{
 		return getFileContent(template).matches("[\\s\\S]*xmlns\\:th\\s*=\\s*\"http\\://www\\.thymeleaf\\.org.*\"[\\s\\S]*");
-	}
-
-	@Override
-	public String process(String template){
-		try{
-			return super.process(getFileContent(template));
-		}catch (Exception e){
-			throw new RuntimeException(e);
-		}
 	}
 
 }

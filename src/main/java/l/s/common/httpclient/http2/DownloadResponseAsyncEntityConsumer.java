@@ -41,8 +41,8 @@ public class DownloadResponseAsyncEntityConsumer<T> extends AbstractBinDataConsu
     public void releaseResources() {
         try {
             download.flush();
-            download.close();
-            channel.close();
+            l.s.common.util.IoUtil.close(download);
+            l.s.common.util.IoUtil.close(channel);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -78,10 +78,10 @@ public class ContentResponseHandle implements HttpClientResponseHandler<Response
 					contentType = charset;
 				}
 				
-				if(contentEncoding!=null && contentEncoding.toLowerCase().equals("gzip")){
+				if(contentEncoding!=null && contentEncoding.equalsIgnoreCase("gzip")){
 					scanner = new InputStreamReader(new GZIPInputStream(inputStream), contentType);
 				}
-				else if(contentEncoding!=null && contentEncoding.toLowerCase().equals("deflate")){
+				else if(contentEncoding!=null && contentEncoding.equalsIgnoreCase("deflate")){
 					scanner = new InputStreamReader(new DeflateInputStream(inputStream), contentType);
 				}
 				else{
@@ -97,8 +97,6 @@ public class ContentResponseHandle implements HttpClientResponseHandler<Response
 					}
 					builder.append(ch, 0, n);
 				}
-				scanner.close();
-				inputStream.close();
 				ResponseContent content = new ResponseContent();
 				content.setContent(builder.toString());
 				
@@ -110,17 +108,13 @@ public class ContentResponseHandle implements HttpClientResponseHandler<Response
 			return response;
 			
 		}catch(Throwable e){
-			e.printStackTrace();
-			if(scanner != null){
-				scanner.close();
-			}
-			if(inputStream != null){
-				inputStream.close();
-			}
 			Response response = new Response();
 			response.setSuccess(false);
 			response.setException(e);
 			return response;
+		}finally {
+			l.s.common.util.IoUtil.close(scanner);
+			l.s.common.util.IoUtil.close(inputStream);
 		}
 		
 	}

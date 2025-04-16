@@ -1,6 +1,5 @@
 package l.s.common.thymeleaf;
 
-import l.s.common.context.ThreadLocalContext;
 import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
@@ -16,8 +15,8 @@ public class JavaxThymeleafContext extends AbstractThymeleafContext{
 
     @Override
     public IContext getContext(){
-        Object httpServletRequest = ThreadLocalContext.getContext().getAttribute("_ls_thymeleaf_request");
-        Object httpServletResponse = ThreadLocalContext.getContext().getAttribute("_ls_thymeleaf_response");
+        Object httpServletRequest = this.httpServletRequest;
+        Object httpServletResponse = this.httpServletResponse;
 
         AbstractContext context;
         if(httpServletRequest!=null && httpServletResponse!=null){
@@ -29,7 +28,7 @@ public class JavaxThymeleafContext extends AbstractThymeleafContext{
             context = new Context();
         }
 
-        Locale locale = ThreadLocalContext.getContext().getAttribute("_ls_thymeleaf_thread_locale", Locale.class);
+        Locale locale = this.getLocale();
         if(locale == null){
             locale = this.locale;
         }

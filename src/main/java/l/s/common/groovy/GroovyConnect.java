@@ -122,18 +122,18 @@ public class GroovyConnect {
 	    }
 	    
 	    GroovyShell gs = new GroovyShell(classLoader,bb);
-	    
-	    InputStream in = new FileInputStream(scriptFile);
-	    Reader reader = new InputStreamReader(in, charset);
-	    Object ret = gs.evaluate(reader); 
-	    reader.close();
-	    in.close();
-	    return ret;
+
+		try(
+			InputStream in = new FileInputStream(scriptFile);
+			Reader reader = new InputStreamReader(in, charset)
+		){
+            return gs.evaluate(reader);
+		}
 	}
 
 	public Object run(String scriptText) throws Exception{
 
-		if(scriptText == null || scriptText.equals("")){
+		if(scriptText == null || scriptText.isEmpty()){
 			return null;
 		}
 

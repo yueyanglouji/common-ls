@@ -28,10 +28,12 @@ public abstract class HttpClient {
 
     private final HttpRoutePlanner routePlanner;
 
+    public int retryTimes;
+
     public HttpClient(Timeout connectTimeout, Timeout responseTimeout,
                 String defaultRequestCharset, String defaultResponseCharset,
                 HttpVersion defaultHttpVersion, RequestHeader defaultHeaders,
-                CookieStore cookieStore, CredentialsStore credentialsStore, HttpRoutePlanner routePlanner){
+                CookieStore cookieStore, CredentialsStore credentialsStore, HttpRoutePlanner routePlanner, int retryTimes) {
 
         this.cookieStore = cookieStore;
         this.credentialsStore = credentialsStore;
@@ -42,6 +44,7 @@ public abstract class HttpClient {
         this.defaultHttpVersion = defaultHttpVersion;
         this.defaultHeaders = defaultHeaders;
         this.routePlanner = routePlanner;
+        this.retryTimes = retryTimes;
     }
 
     public abstract HttpClient start();

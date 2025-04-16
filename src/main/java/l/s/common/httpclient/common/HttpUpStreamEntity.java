@@ -33,7 +33,7 @@ public class HttpUpStreamEntity extends AbstractHttpEntity implements Cloneable 
 		while((n = stream.read(b)) != -1){
 			content.write(b, 0, n);
 		}
-		stream.close();
+		l.s.common.util.IoUtil.close(stream);
 	}
 	
 	public int size(){
@@ -65,14 +65,14 @@ public class HttpUpStreamEntity extends AbstractHttpEntity implements Cloneable 
 			outStream.write(b);
 			outStream.flush();
 		} finally{
-			content.close();
+			l.s.common.util.IoUtil.close(content);
 		}
 		
 	}
 
 	@Override
 	public void close() throws IOException {
-		this.content.close();
+		l.s.common.util.IoUtil.close(content);
 	}
 
 	@Override

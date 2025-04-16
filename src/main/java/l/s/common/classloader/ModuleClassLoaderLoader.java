@@ -1,9 +1,9 @@
 package l.s.common.classloader;
 
+import l.s.common.classloader.module.DefaultModuleFinder;
+import l.s.common.classloader.module.DefaultModuleLoader;
+import l.s.common.classloader.module.LocalModuleParser;
 import l.s.common.vfs.VirtualFile;
-import org.jboss.modules.DefaultModuleFinder;
-import org.jboss.modules.DefaultModuleLoader;
-import org.jboss.modules.LocalModuleParser;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleLoader;
 
@@ -38,7 +38,6 @@ public class ModuleClassLoaderLoader {
     }
 
     public Module loadModule(String name, VirtualFile workDir, VirtualFile[] jarDir, VirtualFile[] classesDir) throws Exception{
-
         ModuleLoader base = Module.getBootModuleLoader();
         DefaultModuleFinder finder = new DefaultModuleFinder(base, workDir, jarDir, classesDir);
         DefaultModuleLoader loader = new DefaultModuleLoader(finder);

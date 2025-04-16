@@ -1,44 +1,52 @@
 package l.s.common.vfs;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class VFS {
-    private static Path home;
+
+    private static VirtualRoot virtualRoot;
 
     static {
-        String path = System.getenv("VFS_HOME");
-        if(path == null || path.equals("")){
-            path = System.getProperty("vfs_home_dir");
+        init();
+    }
+
+    private static void init() {
+        String pkgs = System.getProperty("java.protocol.handler.pkgs");
+        if (pkgs == null || pkgs.trim().isEmpty()) {
+            pkgs = "l.s.common.vfs.protocol";
+            System.setProperty("java.protocol.handler.pkgs", pkgs);
+        } else if (!pkgs.contains("l.s.common.vfs.protocol")) {
+            pkgs += "|l.s.common.vfs.protocol";
+            System.setProperty("java.protocol.handler.pkgs", pkgs);
         }
-        if(path == null || path.equals("")){
-            try {
-                home = Paths.get(Paths.get("").toFile().getCanonicalPath());
-            } catch (IOException e) {
-                home = Paths.get("");
+    }
+
+    public static VirtualRoot getRoot() {
+        if(virtualRoot == null){
+            throw new RuntimeException("Not mounted Virtual root is exists. Use mountRoot() method.");
+        }
+        return virtualRoot;
+    }
+
+    public static VirtualRoot mountRoot(Path path) throws IOException {
+        if(virtualRoot == null || virtualRoot.isClosed()){
+            synchronized (VFS.class){
+                if(virtualRoot == null || virtualRoot.isClosed()){
+                    virtualRoot = VirtualFile.getRoot(path);
+                }
             }
         }else{
-            home = Paths.get(path);
+            if(!virtualRoot.mountPath.equals(path)){
+                throw new RuntimeException("Virtual root is already exists.");
+            }
         }
+        return virtualRoot;
     }
 
-    public static void configuration(Path home){
-        VFS.home = home;
-    }
-
-    public static VirtualFile getBase(String path){
-        return new VirtualFile(Paths.get(path));
-    }
-    public static VirtualFile getBase(URI path){
-        return new VirtualFile(Paths.get(path));
-    }
-    public static VirtualFile getBase(Path path){
-        return new VirtualFile(path);
-    }
-    public static VirtualFile getBase(){
-        return new VirtualFile(home);
+    public static void close() {
+        virtualRoot.closed = true;
+        virtualRoot = null;
     }
 }
 

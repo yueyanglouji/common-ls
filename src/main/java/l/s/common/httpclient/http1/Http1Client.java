@@ -19,9 +19,9 @@ public class Http1Client extends HttpClient {
 	Http1Client(CloseableHttpClient client, Timeout connectTimeout, Timeout responseTimeout,
 				String defaultRequestCharset, String defaultResponseCharset,
 				HttpVersion defaultHttpVersion, RequestHeader defaultHeaders,
-				CookieStore cookieStore, CredentialsStore credentialsStore, HttpRoutePlanner routePlanner){
+				CookieStore cookieStore, CredentialsStore credentialsStore, HttpRoutePlanner routePlanner, int retryTimes){
 		super(connectTimeout, responseTimeout, defaultRequestCharset, defaultResponseCharset, defaultHttpVersion,
-				defaultHeaders, cookieStore, credentialsStore, routePlanner);
+				defaultHeaders, cookieStore, credentialsStore, routePlanner, retryTimes);
 		this.client = client;
 		this.async = Async1.newInstance();
 		this.async.use(client);

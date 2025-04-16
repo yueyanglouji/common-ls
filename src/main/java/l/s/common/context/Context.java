@@ -14,6 +14,10 @@ public class Context {
 
     private String defaultContextID = "__default_context__UUID";
 
+    protected Context(){
+        this(null);
+    }
+
     protected Context(Map<String, Context> contextMap){
         map = new HashMap<>();
         if(contextMap == null || contextMap.size() == 0){

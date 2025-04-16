@@ -6,13 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 
-import org.apache.commons.net.PrintCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPFileFilter;
 import org.apache.commons.net.ftp.FTPReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +35,7 @@ public class FTPConnect {
 	public FTPConnect connect(String host, int port, String userName, String password) throws Exception{
 		try {
 			this.client.configure(config);
-			client.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+			//client.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
 
 			this.client.connect(host, port);
 			
@@ -67,12 +64,10 @@ public class FTPConnect {
 	}
 	
 	public FTPConnect upload(String remotePath, File file) throws Exception{
-		FileInputStream in = new FileInputStream(file);
-		try {
+		try(
+			FileInputStream in = new FileInputStream(file)
+		){
 			return upload(remotePath, in, file.getName());
-		} catch (Exception e) {
-			in.close();
-			throw e;
 		}
 	}
 	
@@ -80,44 +75,41 @@ public class FTPConnect {
 		try{
 			client.changeWorkingDirectory(remotePath);
 			client.storeFile(fileName, in);
-			in.close();
+
 			return this;
 		}catch(Exception e){
 			if (client.isConnected()) {  
 	            try {  
 	            	client.disconnect();  
-	            } catch (Exception ioe) {
-					//nothing.
-	            }  
+	            } catch (Exception ignored) {}
 	        }
 			throw e;
+		}finally {
+			l.s.common.util.IoUtil.close(in);
 		}
 	}
 	
-	public FTPConnect dowanload(String remotePath, String fileName, File file) throws Exception{
+	public FTPConnect download(String remotePath, String fileName, File file) throws Exception{
 		
 		if(file.exists() && file.isDirectory()){
-			return dowanload(remotePath, fileName, new File(file, fileName));
+			return download(remotePath, fileName, new File(file, fileName));
 		}else{
 			file.getParentFile().mkdirs();
-			FileOutputStream out = new FileOutputStream(file);
-			try{
-				return dowanload(remotePath, fileName, out);
-			}catch(Exception e){
-				out.close();
-				throw e;
+			try(
+			    FileOutputStream out = new FileOutputStream(file);
+			){
+				return download(remotePath, fileName, out);
 			}
 		}
 	}
 	
-	public FTPConnect dowanload(String remotePath, String fileName, OutputStream out) throws Exception{
+	public FTPConnect download(String remotePath, String fileName, OutputStream out) throws Exception{
 		try{
 			client.changeWorkingDirectory(remotePath);
 			FTPFile[] fs = client.listFiles(remotePath, file -> file.getName().equals(fileName));
 			
 			if(fs!=null && fs.length == 1){
-				client.retrieveFile(fileName, out);  
-	            out.close(); 
+				client.retrieveFile(fileName, out);
 			}else{
 				throw new FileNotFoundException("file not found path : " + remotePath + " filename : " + fileName);
 			}
@@ -131,6 +123,8 @@ public class FTPConnect {
 	            }  
 	        }
 			throw e;
+		}finally {
+			l.s.common.util.IoUtil.close(out);
 		}
 	}
 	

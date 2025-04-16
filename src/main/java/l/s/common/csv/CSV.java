@@ -69,23 +69,19 @@ public class CSV {
 		if(!file.exists()){
 			throw new FileNotFoundException(file.getAbsolutePath());
 		}
-		
-		FileInputStream in = new FileInputStream(file);
-		InputStreamReader reader = new InputStreamReader(in, charset);
-		CSVParser ps = new CSVParser(reader, format, characterOffset, 1);
-		
-		try {
+
+		try(
+				FileInputStream in = new FileInputStream(file);
+				InputStreamReader reader = new InputStreamReader(in, charset);
+				CSVParser ps = new CSVParser(reader, format, characterOffset, 1);
+				){
 			if(format.getHeader() != null){
 				Map<String, Integer> headermap = ps.getHeaderMap();
 				csv.header = new CSVHeader(headermap);
 			}
-		    for (final CSVRecord record : ps) {
-		        csv.rows.add(new CSVRow(record));
-		    }
-		} finally {
-		    ps.close();
-		    reader.close();
-		    in.close();
+			for (final CSVRecord record : ps) {
+				csv.rows.add(new CSVRow(record));
+			}
 		}
 		return csv;
 		

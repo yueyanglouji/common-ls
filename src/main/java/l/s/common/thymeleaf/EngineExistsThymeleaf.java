@@ -18,15 +18,13 @@ public class EngineExistsThymeleaf extends Thymeleaf{
 	protected void setTemplateResolver(TemplateMode model) {
 	}
 
-	public void setEngine(TemplateEngine engine){
-		this.engine = engine;
+	@Override
+	public EngineExistsThymeleafExecutor createExecutor() {
+		return new EngineExistsThymeleafExecutor(this.contextType, this.engine, this.locale);
 	}
 
-	@Override
-	public EngineExistsThymeleaf setVariable(String name, Object value){
-
-		context.setVariable(name, value);
-		return this;
+	public void setEngine(TemplateEngine engine){
+		this.engine = engine;
 	}
 
 }

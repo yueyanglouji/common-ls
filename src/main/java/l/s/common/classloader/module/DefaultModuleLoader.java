@@ -1,6 +1,10 @@
-package org.jboss.modules;
+package l.s.common.classloader.module;
 
-public class DefaultModuleLoader extends ModuleLoader{
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleFinder;
+import org.jboss.modules.ModuleLoader;
+
+public class DefaultModuleLoader extends ModuleLoader {
 
     DefaultModuleFinder finder;
 
@@ -10,7 +14,7 @@ public class DefaultModuleLoader extends ModuleLoader{
     }
 
     public boolean unloadModule(final String moduleId, final Module module) throws SecurityException {
-        return module.getModuleLoader().unloadModuleLocal(moduleId, module);
+        return JbossAccessor.unloadModule(module.getModuleLoader(), moduleId, module);
     }
 
     public void close(){

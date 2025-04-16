@@ -25,10 +25,7 @@ public class FilePathThymeleaf extends AbstractFileThymeleaf{
 	}
 
 	@Override
-	public FilePathThymeleaf setVariable(String name, Object value){
-
-		context.setVariable(name, value);
-		return this;
+	public FilePathThymeleafExecutor createExecutor() {
+		return new FilePathThymeleafExecutor(this.contextType, this.engine, this.locale);
 	}
-
 }

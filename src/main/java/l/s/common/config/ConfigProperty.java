@@ -3,7 +3,7 @@ package l.s.common.config;
 import java.util.*;
 
 import l.s.common.bean.BeanConverter;
-import org.springframework.core.io.Resource;
+import l.s.common.config.resource.config.Resource;
 
 public class ConfigProperty {
 

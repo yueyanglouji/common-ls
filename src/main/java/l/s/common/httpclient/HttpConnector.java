@@ -5,6 +5,7 @@ import l.s.common.httpclient.common.HttpUpInputPutStream;
 import l.s.common.httpclient.common.HttpUpStreamEntity;
 import l.s.common.httpclient.common.Request;
 import l.s.common.httpclient.common.RequestMethod;
+import l.s.common.httpclient.common.RequestParam;
 import l.s.common.httpclient.common.Response;
 import l.s.common.httpclient.http1.Http1Connector;
 import l.s.common.httpclient.http2.Http2Connector;
@@ -27,6 +28,7 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public abstract class HttpConnector {
 
@@ -115,6 +117,11 @@ public abstract class HttpConnector {
         return this;
     }
 
+    public HttpConnector urlParam(String name, String value){
+        request.addUrlParam(name, value);
+        return this;
+    }
+
     public HttpConnector param(String name, String value){
         request.addParam(name, value);
         return this;
@@ -139,28 +146,28 @@ public abstract class HttpConnector {
 
     public Response get() throws Exception{
         Future<Response> f = getAsync();
-        return f.get();
+        return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
     }
 
     public abstract Future<Response> postAsync() throws Exception;
 
     public Response post() throws Exception{
         Future<Response> f = postAsync();
-        return f.get();
+        return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
     }
 
     public abstract Future<Response> putAsync() throws Exception;
 
     public Response put() throws Exception{
         Future<Response> f = putAsync();
-        return f.get();
+        return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
     }
 
     public abstract Future<Response> deleteAsync() throws Exception;
 
     public Response delete() throws Exception{
         Future<Response> f = deleteAsync();
-        return f.get();
+        return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
     }
 
     public DownloadDevice downloadGet(OutputStream out) throws Exception{
@@ -200,16 +207,12 @@ public abstract class HttpConnector {
     }
 
     protected BasicClassicHttpRequest toHttpClientRequest() throws Exception{
-
-        String url = request.getUrl().toString();
         BasicClassicHttpRequest client;
 
-        if(request.getMethod() != null && request.getMethod() == RequestMethod.GET){
-            setGetParam();
-        }else{
-            setPostParam();
-        }
+        setUrlParam();
+        setUpStreamParam();
 
+        String url = request.getUrl().toString();
         if(request.getMethod() != null){
             if(request.getMethod() == RequestMethod.GET){
                 client = new BasicClassicHttpRequest(Method.GET, url);
@@ -246,7 +249,7 @@ public abstract class HttpConnector {
             if(this.contentType != null){
                 client.addHeader("Content-Type", this.contentType.getMimeType());
             }
-            else if(this.request.getMethod() != RequestMethod.GET){
+            else {
                 if(this.request.getParam().getParam().size() > 0){
                     client.addHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
                 }else{
@@ -267,9 +270,9 @@ public abstract class HttpConnector {
 
     }
 
-    private void setGetParam() throws Exception{
+    private void setUrlParam() throws Exception{
         String url = request.getUrl().toString();
-        String p = getParams();
+        String p = getParams(request.getUrlParam());
 
         if(!"".equals(p)){
             if(url.indexOf('?')==-1){
@@ -284,16 +287,16 @@ public abstract class HttpConnector {
         }
     }
 
-    private void setPostParam() throws Exception{
-        String p = getParams();
+    private void setUpStreamParam() throws Exception{
+        String p = getParams(request.getParam());
 
         if(!"".equals(p)){
             request.getUpStream().addFirst(p);
         }
     }
 
-    private String getParams() throws UnsupportedEncodingException {
-        Map<String, List<String>> params = request.getParam().getParam();
+    private String getParams(RequestParam param) throws UnsupportedEncodingException {
+        Map<String, List<String>> params = param.getParam();
 
         StringBuilder builder = new StringBuilder();
         int n = 0;
@@ -317,5 +320,12 @@ public abstract class HttpConnector {
         }
 
         return builder.toString();
+    }
+
+    protected long getTimeoutSeconds(){
+        Timeout connOut = this.connectTimeout != null? this.connectTimeout : this.client.getConnectTimeout();
+        Timeout responseOut = this.responseTimeout != null? this.responseTimeout : this.client.getResponseTimeout();
+
+        return (connOut.toSeconds() + responseOut.toSeconds() + 1) * (this.client.retryTimes + 1);
     }
 }

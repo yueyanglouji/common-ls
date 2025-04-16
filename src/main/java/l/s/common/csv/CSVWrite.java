@@ -65,17 +65,15 @@ public class CSVWrite {
 	}
 
 	public CSVWrite saveFile(OutputStream out, String charset) throws Exception{
-		OutputStreamWriter writer = new OutputStreamWriter(out, charset);
-		CSVPrinter pt = new CSVPrinter(writer, format);
-		
-		try {
+		try(
+			OutputStreamWriter writer = new OutputStreamWriter(out, charset);
+			CSVPrinter pt = new CSVPrinter(writer, format)
+		){
 		    for (final String[] row : rows) {
 		        pt.printRecord(Arrays.asList(row));
 		    }
 		} finally {
-		    pt.close();
-		    writer.close();
-		    out.close();
+			l.s.common.util.IoUtil.close(out);
 		}
 		return this;
 	}

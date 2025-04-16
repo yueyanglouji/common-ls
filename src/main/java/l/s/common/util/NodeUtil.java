@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+@Deprecated
 public class NodeUtil {
 	private boolean isCData = true;
 	
@@ -52,39 +54,57 @@ public class NodeUtil {
 	public void setCData(boolean isCData) {
 		this.isCData = isCData;
 	}
-	
+
 	public Document parse(File file) throws Exception{
+		return parse(file, "UTF-8");
+	}
+
+	public Document parse(File file, String charset) throws Exception{
+		Scanner in = null;
+		InputStreamReader reader = null;
 		try {
-			Scanner in = new Scanner(new InputStreamReader(new BufferedInputStream(new FileInputStream(file)),"UTF-8"));
+			reader = new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), charset);
+			in = new Scanner(reader);
 			StringBuilder builder = new StringBuilder();
 			while(in.hasNextLine()){
 				builder.append(in.nextLine());
 				builder.append("\n");
 			}
-			in.close();
 			return parse(builder.toString());
-		} catch (Exception e) {
-			throw e;
+		} finally {
+			IoUtil.close(in);
 		}
 	}
+
 	public Document parse(InputStream in){
+		return parse(in, "UTF-8");
+	}
+
+	public Document parse(InputStream in, String charset){
+		Scanner scanner = null;
+		InputStreamReader reader = null;
 		try {
-			Scanner scanner = new Scanner(new InputStreamReader(in,"UTF-8"));
+			reader = new InputStreamReader(in, charset);
+			scanner = new Scanner(reader);
 			StringBuilder builder = new StringBuilder();
 			while(scanner.hasNextLine()){
 				builder.append(scanner.nextLine());
 				builder.append("\n");
 			}
-			scanner.close();
 			return parse(builder.toString());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		}finally {
+			IoUtil.close(scanner);
+			IoUtil.close(reader);
+			IoUtil.close(in);
 		}
 	}
+
 	public Document parse(String str){
 		try {
 			str = str.replaceFirst("<!DOCTYPE\\s[^>]*>", "");
-			ByteArrayInputStream in = new ByteArrayInputStream(str.getBytes("UTF-8"));
+			ByteArrayInputStream in = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
 			return factory.newDocumentBuilder().parse(in);
@@ -92,26 +112,26 @@ public class NodeUtil {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	
+
 	/**
-	 * 
+	 *
 	 * @param evaluate
-	 * 			使用这个方法请把evaluate以"./"或".//"开头，如果
-	 * 			不这样的话依然从文档的根节点开始检索。 效果跟上面方
-	 * 			法一样。
+	 * When using this method, please start evaluate with "./" or ".//". If
+	 * you don't do this, the search will still start from the root node of the document. The effect is the same as the above method
+	 * .
 	 * @param e node
 	 * @param cl
-	 * 			此类型为使用泛型，与return的类型一致，不需要强制转换
-	 * 			，Class类型只能是String.class,NodeList.class,以及
-	 * 			Element.class,Attr.class,Comment.class,Text.class,Node.class,Integer.class,Long.class,Double.class,Float.class,boolean.class中的一种。
+	 * This type uses generics, which is consistent with the return type and does not require forced conversion
+	 * . The Class type can only be String.class, NodeList.class, and
+	 * Element.class, Attr.class, Comment.class, Text.class, Node.class, Integer.class, Long.class, Double.class, Float.class, boolean.class.
 	 * @return
-	 * 			返回类型与传入的泛型一致
-	 * 			节点未找到的情况： 1.如果返回类型是NodeList类型 则返回对象为length==0的NodeList实例。
-	 * 							2.如果返回类型是Element 或者 Attr则返回NULL.
-	 * 							3.如果返回类型是String 类型 则返回""---length为0的String对象。
-	 * 							4.如果返回类型是int 或long 那么小数点后会被省略。
-	 * 			以上均可强制转换而不会因为Null发生类型转换错误。
+	 * The return type is consistent with the generic type passed in
+	 * If the node is not found: 
+	 * 1. If the return type is NodeList type, the returned object is a NodeList instance with length==0.
+	 * 2. If the return type is Element or Attr, NULL is returned.
+	 * 3. If the return type is String, "" is returned --- a String object with a length of 0.
+	 * 4. If the return type is int or long, the decimal point will be omitted.
+	 * All of the above can be forced to convert without causing type conversion errors due to Null.
 	 */
 	@SuppressWarnings("unchecked")
 	public <T>T trip(String evaluate,Node e,Class<T> cl){
@@ -134,24 +154,24 @@ public class NodeUtil {
 				return (T)path.evaluate(evaluate, e, XPathConstants.STRING);
 			}else if(cl==int.class||cl==Integer.class){
 				String value = (String)path.evaluate(evaluate, e, XPathConstants.STRING);
-				Integer intvalue = (int)Double.parseDouble(value);
-				return (T)intvalue;
+				int intValue = (int)Double.parseDouble(value);
+                return (T)(Integer)intValue;
 			}else if(cl==long.class||cl==Long.class){
 				String value = (String)path.evaluate(evaluate, e, XPathConstants.STRING);
-				Long longvalue = (long)Double.parseDouble(value);
-				return (T)longvalue;
+				long longValue = (long)Double.parseDouble(value);
+				return (T)(Long)longValue;
 			}else if(cl==double.class||cl==Double.class){
 				String value = (String)path.evaluate(evaluate, e, XPathConstants.STRING);
-				Double doublevalue = Double.parseDouble(value);
-				return (T)doublevalue;
+				double doubleValue = Double.parseDouble(value);
+				return (T)(Double)doubleValue;
 			}else if(cl==float.class||cl==Float.class){
 				String value = (String)path.evaluate(evaluate, e, XPathConstants.STRING);
-				Float floatvalue = Float.parseFloat(value);
-				return (T)floatvalue;
+				float floatValue = Float.parseFloat(value);
+				return (T)(Float)floatValue;
 			}else if(cl==boolean.class||cl==Boolean.class){
 				String value = (String)path.evaluate(evaluate, e, XPathConstants.STRING);
-				Boolean booleanvalue = Boolean.parseBoolean(value);
-				return (T)booleanvalue;
+				boolean booleanValue = Boolean.parseBoolean(value);
+				return (T)(Boolean)booleanValue;
 			}else{
 				return null;
 			}
@@ -190,7 +210,7 @@ public class NodeUtil {
 				builder.append("translate('");
 				odd = 0;
 			}else{
-				builder.append("','" + tsf + "',\"'\")");
+				builder.append("','").append(tsf).append("',\"'\")");
 				odd = 1;
 			}
 			
@@ -211,20 +231,48 @@ public class NodeUtil {
 		return ((Text)e.getChildNodes().item(0)).getData();
 	}
 	//public String getNodeORAttributeValue(Element element,String no)
-	
+
 	public void outputToStream(Document doc,OutputStream outputStream)throws Exception{
-		PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream,"UTF-8"));
-		out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-		
-		
-		XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
-		XMLEventWriter eventWriter = outputFactory.createXMLEventWriter(out);
-		
-		Element root = doc.getDocumentElement();
-		
-		final NamedNodeMap attrs = root.getAttributes();
-		final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-		Iterator<Attribute> iterator = new Iterator<Attribute>(){
+		outputToStream(doc, outputStream, "UTF-8");
+	}
+
+	public void outputToStream(Document doc, OutputStream outputStream, String charset)throws Exception{
+		outputToStream(doc.getDocumentElement(), outputStream, charset);
+	}
+
+	public void outputToStream(Element element, OutputStream outputStream)throws Exception{
+		outputToStream(element, outputStream, "UTF-8");
+	}
+
+	public void outputToStream(Element element, OutputStream outputStream, String charset)throws Exception{
+		PrintWriter out = null;
+		XMLEventWriter eventWriter = null;
+		try{
+			out = new PrintWriter(new OutputStreamWriter(outputStream, charset));
+
+			XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
+			eventWriter = outputFactory.createXMLEventWriter(out);
+
+			final NamedNodeMap attrs = element.getAttributes();
+			final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+			Iterator<Attribute> iterator = getAttributeIterator(attrs, eventFactory);
+			eventWriter.add(eventFactory.createStartDocument("UTF-8","1.0"));
+			eventWriter.add(eventFactory.createStartElement(new QName(element.getNodeName()), iterator, null));
+
+			addEvent(element.getChildNodes(), eventWriter,eventFactory);
+
+			eventWriter.add(eventFactory.createEndElement(new QName(element.getNodeName()), null));
+			eventWriter.flush();
+			out.flush();
+		} finally {
+			IoUtil.close(eventWriter);
+			IoUtil.close(out);
+			IoUtil.close(outputStream);
+		}
+	}
+
+	private Iterator<Attribute> getAttributeIterator(NamedNodeMap attrs, XMLEventFactory eventFactory){
+		return new Iterator<Attribute>(){
 			int i=0;
 			public boolean hasNext() {
 				if(i<attrs.getLength()){
@@ -241,77 +289,47 @@ public class NodeUtil {
 			public void remove() {
 				//do nothing.. dot remove.
 			}
-			
+
 		};
-		eventWriter.add(eventFactory.createStartElement(new QName(root.getNodeName()), iterator, null));
-		
-		addEvent(root.getChildNodes(), eventWriter,eventFactory);
-		
-		eventWriter.add(eventFactory.createEndElement(new QName(root.getNodeName()), null));
-		eventWriter.flush();
-		eventWriter.close();
-		out.flush();
-		out.close();
 	}
-	
-	public void creatXmlFile(Document doc,String fileName)throws Exception{
-		File f = new File(fileName);
-		this.creatXmlFile(doc, f);
+
+	public void outputToFile(Document doc, File file)throws Exception{
+		outputToFile(doc, file, "UTF-8");
 	}
-	public void creatXmlFile(Document doc,File file)throws Exception{
-		File parent = file.getParentFile();
-		if(!parent.exists()){
-			parent.mkdirs();
-		}
+
+	public void outputToFile(Document doc, File file, String charset)throws Exception{
+		IoUtil.mkdirsParents(file);
+		IoUtil.createNewFile(file);
+		outputXmlFile(doc, file, charset);
+	}
+
+	public void outputToFile(Element doc, File file)throws Exception{
+		outputToFile(doc, file, "UTF-8");
+	}
+
+	public void outputToFile(Element doc, File file, String charset)throws Exception{
+		IoUtil.mkdirsParents(file);
 //		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		file.createNewFile();
+		IoUtil.createNewFile(file);
 //		transformer.transform(new DOMSource(doc), new StreamResult(file));
 		
 		//zui 2
-		outputXmlFile(doc, file);
-	
+		outputXmlFile(doc, file, charset);
 	}
-	private void outputXmlFile(Document doc,File file)throws Exception{
-		PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file),"UTF-8"));
-		out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-		
-		
-		XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
-		XMLEventWriter eventWriter = outputFactory.createXMLEventWriter(out);
-		
-		Element root = doc.getDocumentElement();
-		
-		final NamedNodeMap attrs = root.getAttributes();
-		final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-		Iterator<Attribute> iterator = new Iterator<Attribute>(){
-			int i=0;
-			public boolean hasNext() {
-				if(i<attrs.getLength()){
-					return true;
-				}
-				return false;
-			}
 
-			public Attribute next() {
-				Node node =  attrs.item(i++);
-				return eventFactory.createAttribute(new QName(node.getNodeName()), node.getNodeValue());
-			}
 
-			public void remove() {
-				//do nothing.. dot remove.
-			}
-			
-		};
-		eventWriter.add(eventFactory.createStartElement(new QName(root.getNodeName()), iterator, null));
-		
-		addEvent(root.getChildNodes(), eventWriter,eventFactory);
-		
-		eventWriter.add(eventFactory.createEndElement(new QName(root.getNodeName()), null));
-		eventWriter.flush();
-		eventWriter.close();
-		out.flush();
-		out.close();
+	private void outputXmlFile(Document doc, File file, String charset) throws Exception {
+		try (FileOutputStream fos = new FileOutputStream(file)) {
+						outputToStream(doc, fos, charset);
+		}
 	}
+
+	private void outputXmlFile(Element element, File file, String charset) throws Exception {
+	    try (FileOutputStream fos = new FileOutputStream(file)) {
+	        outputToStream(element, fos, charset);
+	    }
+	}
+
 	// add event to xmleventwriter.
 	private void addEvent(NodeList list,XMLEventWriter eventWriter,final XMLEventFactory eventFactory)throws Exception{
 		for(int i=0;i<list.getLength();i++){
@@ -331,25 +349,7 @@ public class NodeUtil {
 			else if(node instanceof Element){
 				Element element = (Element)(node);
 				final NamedNodeMap attrs = element.getAttributes();
-				Iterator<Attribute> iterator = new Iterator<Attribute>(){
-					int i=0;
-					public boolean hasNext() {
-						if(i<attrs.getLength()){
-							return true;
-						}
-						return false;
-					}
-
-					public Attribute next() {
-						Node node =  attrs.item(i++);
-						return eventFactory.createAttribute(new QName(node.getNodeName()), node.getNodeValue());
-					}
-
-					public void remove() {
-						//do nothing.. dot remove.
-					}
-					
-				};
+				Iterator<Attribute> iterator = getAttributeIterator(attrs, eventFactory);
 				eventWriter.add(eventFactory.createStartElement(new QName(element.getNodeName()), iterator, null));
 				
 				addEvent(element.getChildNodes(), eventWriter,eventFactory);
@@ -359,20 +359,22 @@ public class NodeUtil {
 		}
 	}
 	
-	/**
-	 * 修改属性的值。
-	 * @param attr
-	 * @param value
-	 */
 	public void change(String evaluate, Node node, String value){
 		Node get = trip(evaluate, node, Node.class);
 		change(get, value);
 	}
-	
+
 	/**
-	 * 修改属性的值。
-	 * @param attr
-	 * @param value
+	 * Modify the value of a node.
+	 *
+	 * <p>This method calls the corresponding modification method according to the type of the node. If the node is an attribute node ({@code ATTRIBUTE_NODE}), the method for modifying the attribute value is called;
+	 * If the node is an element node ({@code ELEMENT_NODE}), the method for modifying the attribute value of the element node is called. If the node is neither an attribute node nor an element node,
+	 * A runtime exception is thrown. </p>
+	 *
+	 * @param node The node to be modified
+	 * @param value The new node value
+	 *
+	 * @throws RuntimeException Thrown if the node is neither an attribute node nor an element node
 	 */
 	public void change(Node node,String value){
 		if(node.getNodeType() == Node.ATTRIBUTE_NODE){
@@ -385,21 +387,29 @@ public class NodeUtil {
 			throw new RuntimeException("change node value error.that node is not Attr node and not Element node.");
 		}
 	}
-	
+
 	/**
-	 * 修改属性的值。
-	 * @param attr
-	 * @param value
+	 * Modify the value of an attribute.
+	 *
+	 * <p>This method is used to change the value of a given attribute. </p>
+	 *
+	 * @param attr The attribute object to be modified
+	 * @param value The new attribute value
+	 *
 	 */
 	private void change(Attr attr,String value){
 		if(attr==null) return;
 		attr.setNodeValue(value);
 	}
-	
+
 	/**
-	 * 修改属性的值。
-	 * @param attr
-	 * @param value
+	 * Modify the attribute value of an element.
+	 *
+	 * <p>This method is used to change the value of the specified attribute of the specified element. </p>
+	 *
+	 * @param element The element whose attribute is to be modified
+	 * @param attr The name of the attribute to be modified
+	 * @param value The new attribute value
 	 */
 	public void change(Element element,String attr,String value){
 		if(element==null) return;
@@ -437,23 +447,12 @@ public class NodeUtil {
 		parentElement.appendChild(childElement);
 		parentElement.appendChild(doc.createTextNode("\n"));
 	}
-	
-	/**
-	 * 
-	 * @param document
-	 * @param evaluate 使用发放与trip相同。
-	 * @return
-	 */
+
 	public Element cloneElement(Document document,String evaluate){
 		Element target = this.trip(evaluate, document, Element.class);
 		return cloneElement(target);
 	}
-	/**
-	 * 
-	 * @param element
-	 * @param evaluate 使用发放与trip相同。
-	 * @return
-	 */
+
 	public Element cloneElement(Element element,String evaluate){
 		Element target = this.trip(evaluate, element, Element.class);
 		return cloneElement(target);
@@ -468,27 +467,30 @@ public class NodeUtil {
 			if(nodes.item(i).getNodeType() == Node.ELEMENT_NODE){
 				return true;
 			}
-			continue;
 		}
 		return false;
 	}
 	
 	public List<Element> getChildElements(Element element){
 		NodeList nodes = element.getChildNodes();
-		List<Element> list = new ArrayList<Element>();
+		List<Element> list = new ArrayList<>();
 		for(int i=0;i<nodes.getLength();i++){
 			if(nodes.item(i).getNodeType() == Node.ELEMENT_NODE){
 				list.add((Element)nodes.item(i));
 			}
-			continue;
 		}
 		return list;
 	}
 	/**
-	 * 复制 不同document中的节点 到sourceDocument.
-	 * @param e
-	 * @param sourceDocument
-	 * @return
+	 * Copies nodes from different documents to the target document.
+	 *
+	 * <p>This method copies the specified element node and all its attributes and child nodes from the source document to the target document.
+	 * If the element contains text nodes or CDATA section nodes, they will be converted to CDATA sections and copied to the target document.
+	 * If the element contains child element nodes, these child elements will also be copied recursively. </p>
+	 *
+	 * @param e The source element node to be copied
+	 * @param sourceDocument The target document, that is, the document to be copied
+	 * @return Returns the new element node created in the target document, which is a copy of the source element node
 	 */
 	public Element copyElement(Element e,Document sourceDocument){
 		String nodeName = e.getNodeName();
@@ -502,7 +504,7 @@ public class NodeUtil {
 			Node child = childs.item(i);
 			if(child.getNodeType()==Node.TEXT_NODE||child.getNodeType()==Node.CDATA_SECTION_NODE){
 				String value = child.getNodeValue();
-				if(!value.trim().equals("")){
+				if(!value.trim().isEmpty()){
 					top.appendChild(sourceDocument.createCDATASection(value));
 				}
 			}
@@ -513,9 +515,15 @@ public class NodeUtil {
 		}
 		return top;
 	}
-	
+
 	/**
-	 *  此方法会删除包括element节点和此节点的下一个TEXT节点，谨慎使用。
+	 * Delete the specified element node and the text node that follows it.
+	 *
+	 * <p>This method will traverse the child node list of the parent node of the specified element node, find the element node and delete it.
+	 * If there is a text node ({@code Text} type) immediately after the element node, delete the text node at the same time.
+	 * Please use this method with caution because it will permanently remove the specified element and its subsequent text nodes from the DOM tree. </p>
+	 *
+	 * @param element The element node to be deleted
 	 */
 	public void removeElement(Element element) {
 		Element parent = (Element)element.getParentNode();
@@ -540,58 +548,31 @@ public class NodeUtil {
 	}
 	
 	public String toString(Element e) throws Exception{
-		
+
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
-		XMLEventWriter eventWriter = outputFactory.createXMLEventWriter(new OutputStreamWriter(out,"UTF-8"));
-		
-		final NamedNodeMap attrs = e.getAttributes();
-		final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-		Iterator<Attribute> iterator = new Iterator<Attribute>(){
-			int i=0;
-			public boolean hasNext() {
-				if(i<attrs.getLength()){
-					return true;
-				}
-				return false;
-			}
+		outputToStream(e, out, "UTF-8");
 
-			public Attribute next() {
-				Node node =  attrs.item(i++);
-				return eventFactory.createAttribute(new QName(node.getNodeName()), node.getNodeValue());
-			}
-
-			public void remove() {
-				//do nothing.. dot remove.
-			}
-			
-		};
-		eventWriter.add(eventFactory.createStartElement(new QName(e.getNodeName()), iterator, null));
-		
-		addEvent(e.getChildNodes(), eventWriter,eventFactory);
-		
-		eventWriter.add(eventFactory.createEndElement(new QName(e.getNodeName()), null));
-		eventWriter.flush();
-		eventWriter.close();
-		out.flush();
-		out.close();
-		
-		return new String(out.toByteArray(),"UTF-8");
+		return new String(out.toByteArray(), StandardCharsets.UTF_8);
 	}
 	
 	public String childToString(Element e) throws Exception{
-		
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
-		XMLEventWriter eventWriter = outputFactory.createXMLEventWriter(new OutputStreamWriter(out,"UTF-8"));
-		
-		final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-		addEvent(e.getChildNodes(), eventWriter,eventFactory);
-		eventWriter.flush();
-		eventWriter.close();
-		out.flush();
-		out.close();
-		
-		return new String(out.toByteArray(),"UTF-8");
+		ByteArrayOutputStream out = null;
+		XMLEventWriter eventWriter = null;
+		try{
+			out = new ByteArrayOutputStream();
+			XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
+			eventWriter = outputFactory.createXMLEventWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+
+			final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+			addEvent(e.getChildNodes(), eventWriter,eventFactory);
+			eventWriter.flush();
+			out.flush();
+
+			return new String(out.toByteArray(), StandardCharsets.UTF_8);
+		} finally {
+			IoUtil.close(eventWriter);
+			IoUtil.close(out);
+		}
+
 	}
 }

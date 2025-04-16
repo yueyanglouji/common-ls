@@ -8,39 +8,40 @@ import org.thymeleaf.templatemode.TemplateMode;
 
 public abstract class Thymeleaf {
 
-	protected AbstractThymeleafContext context;
-
 	protected TemplateEngine engine;
 
 	protected TemplateMode mode;
 
 	protected TemplateMessageResolver templateMessageResolver;
-	
+
+	protected  CONTEXT_TYPE contextType;
+
+	protected Locale locale;
+
 	public Thymeleaf(){
-		try {
-			Class.forName("javax.servlet.http.HttpServletRequest");
-			this.context = new JavaxThymeleafContext();
-			return;
-		} catch (ClassNotFoundException e) {
-			//
-		}
-		try {
-			Class.forName("jakarta.servlet.http.HttpServletRequest");
-			this.context = new JakartaThymeleafContext();
-			return;
-		} catch (ClassNotFoundException e) {
-			//
-		}
-		this.context = new ThymeleafContext();
+		this(null);
 	}
 
 	public Thymeleaf(CONTEXT_TYPE contextType){
-		if(contextType == CONTEXT_TYPE.jakartaServlet){
-			this.context = new JakartaThymeleafContext();
-		}else if(contextType == CONTEXT_TYPE.javaxServlet) {
-			this.context = new JavaxThymeleafContext();
-		}else {
-			this.context = new ThymeleafContext();
+		this.locale = Locale.getDefault();
+		if(contextType == null){
+			try {
+				Class.forName("javax.servlet.http.HttpServletRequest");
+				this.contextType = CONTEXT_TYPE.javaxServlet;
+				return;
+			} catch (ClassNotFoundException e) {
+				//
+			}
+			try {
+				Class.forName("jakarta.servlet.http.HttpServletRequest");
+				this.contextType = CONTEXT_TYPE.jakartaServlet;
+				return;
+			} catch (ClassNotFoundException e) {
+				//
+			}
+			this.contextType = CONTEXT_TYPE.notWeb;
+		}else{
+			this.contextType = contextType;
 		}
 	}
 
@@ -80,33 +81,10 @@ public abstract class Thymeleaf {
 		engine.addLinkBuilder(new StandardLinkBuilder());
 	}
 
-	public void setGlobalLocal(Locale locale){
-		context.setGlobalLocale(locale);
-	}
+	public abstract ThymeleafExecutor createExecutor();
 
-	public Thymeleaf setThreadLocal(Locale local){
-		context.setThreadLocale(local);
-		return this;
-	}
-
-	public Thymeleaf setVariable(String name, Object value){
-		context.setVariable(name, value);
-		return this;
-	}
-
-	/**
-	 *
-	 * @param request javax.http.HttpServletRequest or jakarta.http.HttpServletRequest
-	 * @param response javax.http.HttpServletResponse or jakarta.http.HttpServletResponse
-	 * @return this
-	 */
-	public Thymeleaf setWebContext(Object request, Object response){
-		context.setHttpServletRequestAndResponse(request, response);
-		return this;
-	}
-
-	public String process(String template){
-		return engine.process(template, context.getContext());
+	public void setLocal(Locale locale) {
+		this.locale = locale;
 	}
 
 	public enum CONTEXT_TYPE{

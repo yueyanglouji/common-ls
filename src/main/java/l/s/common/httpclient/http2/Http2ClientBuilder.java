@@ -38,7 +38,6 @@ public class Http2ClientBuilder extends AbstractHttpClientBuilder {
                 .setConnectionReuseStrategy(new NoConnectionReuseStrategy())
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofMinutes(1))
-                .disableAutomaticRetries()
                 .disableRedirectHandling()
                 .setUserAgent("");
 
@@ -98,9 +97,10 @@ public class Http2ClientBuilder extends AbstractHttpClientBuilder {
                     .addResponseInterceptorFirst(new ResponseProcessCookies())
                     .setDefaultCredentialsProvider(credentialsStore)
                     .setRoutePlanner(routePlanner)
+                    .setRetryStrategy(httpRequestRetryStrategy)
                     .build();
         }
         return new Http2Client(closeableHttpAsyncClient, connectTimeout, responseTimeout, defaultRequestCharset, defaultResponseCharset,
-                defaultHttpVersion, defaultHeaders, cookieStore, credentialsStore, routePlanner);
+                defaultHttpVersion, defaultHeaders, cookieStore, credentialsStore, routePlanner, retryTimes);
     }
 }

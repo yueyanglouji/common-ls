@@ -36,7 +36,6 @@ public class Http1ClientBuilder extends AbstractHttpClientBuilder {
                 .setConnectionReuseStrategy(new NoConnectionReuseStrategy())
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofMinutes(1))
-                .disableAutomaticRetries()
                 .disableRedirectHandling()
                 .disableDefaultUserAgent();
         init();
@@ -93,11 +92,12 @@ public class Http1ClientBuilder extends AbstractHttpClientBuilder {
                     .addResponseInterceptorFirst(new ResponseProcessCookies())
                     .setDefaultCredentialsProvider(credentialsStore)
                     .setRoutePlanner(routePlanner)
+                    .setRetryStrategy(httpRequestRetryStrategy)
                     .build();
         }
         return new Http1Client(closeableHttpClient, connectTimeout, responseTimeout,
                 defaultRequestCharset, defaultResponseCharset,
                 defaultHttpVersion, defaultHeaders, cookieStore,
-                credentialsStore, routePlanner);
+                credentialsStore, routePlanner, retryTimes);
     }
 }

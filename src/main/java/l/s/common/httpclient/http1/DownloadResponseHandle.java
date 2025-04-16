@@ -5,12 +5,10 @@ import l.s.common.httpclient.common.DownloadDevice;
 import l.s.common.httpclient.common.Response;
 import l.s.common.httpclient.common.ResponseContent;
 import l.s.common.httpclient.common.ResponseHeader;
-import org.apache.hc.client5.http.ClientProtocolException;
 import org.apache.hc.client5.http.entity.DeflateInputStream;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +32,11 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 	}
 
 	@Override
-	public Response handleResponse(ClassicHttpResponse r) throws ClientProtocolException, IOException {
+	public Response handleResponse(ClassicHttpResponse r) throws IOException {
 		InputStream inputStream = null;
 		InputStream in = null;
 
 		try{
-			System.out.println("##################################################################");
 			Response response = new Response();
 			
 			ResponseHeader header = new ResponseHeader();
@@ -72,7 +69,6 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 			String contentEncoding = header.getHeader("Content-Encoding");
 			
 			if(inputStream == null){
-				download.close();
 				downloadDevice.setRate(1);
 				downloadDevice.setSize(0);
 				ResponseContent content = new ResponseContent();
@@ -122,10 +118,7 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 				}
 				downloadDevice.setRate(1);
 				downloadDevice.setSize(length / 1024.0F / 1024.0F);
-				in.close();
-				inputStream.close();
 				download.flush();
-				download.close();
 				
 				ResponseContent content = new ResponseContent();
 				content.setContent(contentType);
@@ -141,13 +134,6 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 			return response;
 			
 		}catch(Throwable e){
-			e.printStackTrace();
-			if(inputStream != null){
-				inputStream.close();
-			}
-			if(in != null){
-				in.close();
-			}
 			Response response = new Response();
 			response.setSuccess(false);
 			response.setException(e);
@@ -158,6 +144,10 @@ public class DownloadResponseHandle implements HttpClientResponseHandler<Respons
 			downloadDevice.setException(e);
 			downloadDevice.setWaite(false);
 			return response;
+		}finally {
+			l.s.common.util.IoUtil.close(inputStream);
+			l.s.common.util.IoUtil.close(in);
+			l.s.common.util.IoUtil.close(download);
 		}
 		
 	}

@@ -19,13 +19,13 @@ import javax.sql.DataSource;
 
 public class SqlSessionLocal {
 
-	private static final ThreadLocal<SqlSession> threadLocal = new ThreadLocal<SqlSession>();
+	private static final ThreadLocal<SqlSession> THREAD_LOCAL = new ThreadLocal<SqlSession>();
 	
 	private SqlSession getSession(){
-		SqlSession session = threadLocal.get();
+		SqlSession session = THREAD_LOCAL.get();
 		if(session == null){
 			session = factory.openSession(autoCommit);
-			threadLocal.set(session);
+			THREAD_LOCAL.set(session);
 		}
 		return session;
 	}
@@ -170,6 +170,6 @@ public class SqlSessionLocal {
 	
 	public void close(){
 		getSession().close();
-		threadLocal.set(null);
+		THREAD_LOCAL.remove();
 	}
 }

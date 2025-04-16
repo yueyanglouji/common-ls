@@ -3,9 +3,11 @@ package l.s.common.httpclient;
 import l.s.common.httpclient.common.CookieStore;
 import l.s.common.httpclient.common.NoCookieStore;
 import l.s.common.httpclient.common.RequestHeader;
+import l.s.common.httpclient.support.CustomHttpRequestRetryStrategy;
 import l.s.common.httpclient.support.CustomClientConnectionReuseStrategy;
 import l.s.common.httpclient.support.NoConnectionReuseStrategy;
 import l.s.common.util.StringUtil;
+import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.Credentials;
 import org.apache.hc.client5.http.auth.CredentialsStore;
@@ -64,6 +66,10 @@ public abstract class AbstractHttpClientBuilder {
 
     protected ConnectionReuseStrategy connectionReuseStrategy;
 
+    protected HttpRequestRetryStrategy httpRequestRetryStrategy;
+
+    protected int retryTimes = 0;
+
     protected AbstractHttpClientBuilder(){
         defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec("RFC6265")
@@ -119,6 +125,7 @@ public abstract class AbstractHttpClientBuilder {
         this.cookieStore = new CookieStore();
         this.credentialsStore = new BasicCredentialsProvider();
         this.defaultHeaders = new RequestHeader();
+        this.httpRequestRetryStrategy = new CustomHttpRequestRetryStrategy(0, TimeValue.ofSeconds(1L));
     }
 
     public RequestConfig.Builder getDefaultRequestConfig() {
@@ -142,6 +149,20 @@ public abstract class AbstractHttpClientBuilder {
             this.cookieStore = new NoCookieStore();
         }else{
             this.cookieStore = new CookieStore();
+        }
+        return this;
+    }
+
+    public AbstractHttpClientBuilder retryTimes(int times){
+        if(times > 0){
+            if(times > 5){
+                // max retry times is 5
+                times = 5;
+            }
+            this.retryTimes = times;
+            this.httpRequestRetryStrategy = new CustomHttpRequestRetryStrategy(times, TimeValue.ofSeconds(1L));
+        }else{
+            this.httpRequestRetryStrategy = new CustomHttpRequestRetryStrategy(0, TimeValue.ofSeconds(1L));
         }
         return this;
     }

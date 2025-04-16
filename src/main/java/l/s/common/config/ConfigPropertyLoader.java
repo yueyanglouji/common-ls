@@ -1,10 +1,10 @@
 package l.s.common.config;
 
 import l.s.common.bean.BeanConverter;
+import l.s.common.config.resource.config.ClassPathResource;
+import l.s.common.config.resource.config.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

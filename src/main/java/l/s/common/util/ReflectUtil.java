@@ -14,9 +14,9 @@ import java.util.Map;
 public class ReflectUtil {
 
 	/**
-	 * 一次寻找子类 和超类中的方法 未找到则返回null;
+	 * Find method form class and parent class, null will return if not found.
 	 */
-	public Method getDeclaredMethod(Class<?> cl, String methodName,
+	public static Method getDeclaredMethod(Class<?> cl, String methodName,
 			Class<?>... parameterTypes) {
 
 		do {
@@ -32,9 +32,9 @@ public class ReflectUtil {
 	}
 
 	/**
-	 * 一次寻找子类 和超类中的方法 未找到则返回null;
+	 * Find method form class and parent class, null will return if not found.
 	 */
-	public List<Method> getDeclaredMethods(Class<?> cl) {
+	public static List<Method> getDeclaredMethods(Class<?> cl) {
 		List<Method> list = new ArrayList<>();
 		do {
 			try {
@@ -51,9 +51,9 @@ public class ReflectUtil {
 	}
 	
 	/**
-	 * 获取所有子类 父类中的属性，如果子类父类中有同名的属性，子类的field会优先于父类属性，排在返回值Filed[]数组中的前面。
+	 * Find all the field from class and parent class, if same name in class and parent class, in return value Field[], class field will sort front of parent field.
 	 */
-	public Field[] getDeclaredFields(Class<?> cl) {
+	public static Field[] getDeclaredFields(Class<?> cl) {
         List<Field> list = new ArrayList<Field>();
 		do {
 			try {
@@ -74,7 +74,7 @@ public class ReflectUtil {
 		}
     }
 
-	public Field getDeclaredField(Class<?> cl, String fieldName) {
+	public static Field getDeclaredField(Class<?> cl, String fieldName) {
 
 		do {
 			try {
@@ -87,7 +87,7 @@ public class ReflectUtil {
 		return null;
 	}
 
-	public Class<?> loadClass(String classname) {
+	public static Class<?> loadClass(String classname) {
 		Class<?> cl;
 		try {
 			cl = Class.forName(classname);
@@ -98,7 +98,7 @@ public class ReflectUtil {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void setValue(Object o, String fieldName, Object value) {
+	public static void setValue(Object o, String fieldName, Object value) {
 		Class<?> cl = o.getClass();
 		if (Map.class.isAssignableFrom(cl)) {
 			@SuppressWarnings("rawtypes")
@@ -120,8 +120,20 @@ public class ReflectUtil {
 		}
 	}
 
-	public Object getValue(Object o, String fieldName) {
+	public static Object getStaticValueByClassName(String className, String fieldName) {
+        Class<?> aClass = null;
+        try {
+            aClass = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return getValue(aClass, aClass, fieldName);
+	}
+	public static Object getValue(Object o, String fieldName) {
 		Class<?> cl = o.getClass();
+		return getValue(cl, o, fieldName);
+	}
+	public static Object getValue(Class<?> cl, Object o, String fieldName) {
 		if (Map.class.isAssignableFrom(cl)) {
 			@SuppressWarnings("rawtypes")
 			Map map = (Map) o;
@@ -129,16 +141,26 @@ public class ReflectUtil {
 		} else {
 			String methodName = getMethodName(fieldName, "get");
 			Method method = getDeclaredMethod(cl, methodName);
-			try {
-				return method.invoke(o);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
+			if(method != null){
+				try {
+					return method.invoke(o);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
 			}
-		}
+			Field declaredField = getDeclaredField(cl, fieldName);
+			declaredField.setAccessible(true);
+            try {
+                return declaredField.get(o);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
 
 	}
 	
-	private String getMethodName(String fieldName, String pre){
+	private static String getMethodName(String fieldName, String pre){
 		if(fieldName.length() > 1){
 			if((fieldName.charAt(1) + "").matches("[A-Z]")){
 				return pre + fieldName;
@@ -148,7 +170,7 @@ public class ReflectUtil {
 	}
 
 	
-	public String changeFirstChar2Upper(String str){
+	public static String changeFirstChar2Upper(String str){
 		if(str!=null && !str.equals("")){
 			String first = str.substring(0,1);
 			return first.toUpperCase()+str.substring(1);
@@ -157,7 +179,7 @@ public class ReflectUtil {
 		}
 	}
 	
-	public String changeFirstChar2Lower(String str){
+	public static String changeFirstChar2Lower(String str){
 		if(str!=null && !str.equals("")){
 			String first = str.substring(0,1);
 			return first.toLowerCase()+str.substring(1);
@@ -166,23 +188,28 @@ public class ReflectUtil {
 		}
 	}
 	
-	public Object clone(Object o) throws Exception{
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);
-		objectOutputStream.writeObject(o);
-		objectOutputStream.flush();
-		objectOutputStream.close();
-		
-		out.flush();
-		byte[] b = out.toByteArray();
-		out.close();
-		
-		ByteArrayInputStream in = new ByteArrayInputStream(b);
-		ObjectInputStream objectInputStream = new ObjectInputStream(in);
-		Object newojb = objectInputStream.readObject();
-		objectInputStream.close();
-		in.close();
-		
-		return newojb;
+	public static Object clone(Object o) throws Exception{
+		ByteArrayOutputStream out = null;
+		ObjectOutputStream objectOutputStream = null;
+		ByteArrayInputStream in = null;
+		ObjectInputStream objectInputStream = null;
+		try{
+			out = new ByteArrayOutputStream();
+			objectOutputStream = new ObjectOutputStream(out);
+			objectOutputStream.writeObject(o);
+			objectOutputStream.flush();
+			out.flush();
+			byte[] b = out.toByteArray();
+
+			in = new ByteArrayInputStream(b);
+			objectInputStream = new ObjectInputStream(in);
+            return objectInputStream.readObject();
+		}finally {
+			IoUtil.close(out);
+			IoUtil.close(objectOutputStream);
+			IoUtil.close(in);
+			IoUtil.close(objectInputStream);
+		}
+
 	}
 }

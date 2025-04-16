@@ -1,6 +1,7 @@
 package l.s.common.groovy.mail;
 
 import l.s.common.thymeleaf.Thymeleaf;
+import l.s.common.thymeleaf.ThymeleafExecutor;
 import l.s.common.thymeleaf.ThymeleafFactory;
 import org.springframework.core.io.ContextResource;
 import org.springframework.core.io.Resource;
@@ -43,31 +44,35 @@ public class Mail {
         MimeBodyPart bodyPart = new MimeBodyPart();
         bodyPart.setHeader("Content-Type", messageType);
 
-        String content = "";
+        StringBuilder content = new StringBuilder();
         if(this.messageResource != null){
 
             if(this.messageResource.getClass() == InMemoryResource.class){
                 this.charset = "UTF-8";
             }
-            InputStream in = this.messageResource.getInputStream();
-            InputStreamReader reader = new InputStreamReader(in, charset);
-            Scanner sc = new Scanner(reader);
-
-            while(sc.hasNextLine()){
-                String line = sc.nextLine();
-                content += line;
-                content += "\n";
+            try(
+                InputStream in = this.messageResource.getInputStream();
+                InputStreamReader reader = new InputStreamReader(in, charset);
+                Scanner sc = new Scanner(reader)
+            ){
+                while(sc.hasNextLine()){
+                    String line = sc.nextLine();
+                    content.append(line);
+                    content.append("\n");
+                }
             }
-            sc.close();
-            reader.close();
-            in.close();
         }
 
-
         if(this.useThymeleaf){
-            bodyPart.setContent(thymeleaf.process(content), messageType);
+            ThymeleafExecutor executor = thymeleaf.createExecutor();
+            for(Map.Entry<String, Object> en : this.variables.entrySet()){
+                String name = en.getKey();
+                Object variable = en.getValue();
+                executor.setVariable(name, variable);
+            }
+            bodyPart.setContent(executor.process(content.toString()), messageType);
         }else{
-            bodyPart.setContent(content, messageType);
+            bodyPart.setContent(content.toString(), messageType);
         }
 
         Multipart multiPart = new MimeMultipart();
@@ -118,11 +123,6 @@ public class Mail {
         }else{
             thymeleaf = ThymeleafFactory.getStringContentThymeleaf(TemplateMode.HTML);
         }
-        for(Map.Entry<String, Object> en : this.variables.entrySet()){
-            String name = en.getKey();
-            Object variable = en.getValue();
-            thymeleaf.setVariable(name, variable);
-        }
     }
 
     private MimeMessage constructMail(Session session) throws Exception{
@@ -137,7 +137,13 @@ public class Mail {
         mimeMessage.setFrom(new InternetAddress(from));
 
         if(this.useThymeleaf){
-            mimeMessage.setSubject(thymeleaf.process(subject));
+            ThymeleafExecutor executor = thymeleaf.createExecutor();
+            for(Map.Entry<String, Object> en : this.variables.entrySet()){
+                String name = en.getKey();
+                Object variable = en.getValue();
+                executor.setVariable(name, variable);
+            }
+            mimeMessage.setSubject(executor.process(subject));
         }else{
             mimeMessage.setSubject(subject);
         }

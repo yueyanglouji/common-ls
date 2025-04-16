@@ -13,6 +13,7 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 
 public class Http1Connector extends HttpConnector {
@@ -64,7 +65,7 @@ public class Http1Connector extends HttpConnector {
 	
 	public<T> T get(HttpClientResponseHandler<T> handler) throws Exception{
 		Future<T> f = getAsync(handler);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 	
 	public<T> Future<T> postAsync(HttpClientResponseHandler<T> handler) throws Exception{
@@ -78,7 +79,7 @@ public class Http1Connector extends HttpConnector {
 	
 	public<T> T post(HttpClientResponseHandler<T> handler) throws Exception{
 		Future<T> f = postAsync(handler);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 	
 	public<T> Future<T> putAsync(HttpClientResponseHandler<T> handler) throws Exception{
@@ -92,7 +93,7 @@ public class Http1Connector extends HttpConnector {
 	
 	public<T> T put(HttpClientResponseHandler<T> handler) throws Exception{
 		Future<T> f = putAsync(handler);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 	
 	public<T> Future<T> deleteAsync(HttpClientResponseHandler<T> handler) throws Exception{
@@ -106,7 +107,7 @@ public class Http1Connector extends HttpConnector {
 	
 	public<T> T delete(HttpClientResponseHandler<T> handler) throws Exception{
 		Future<T> f = deleteAsync(handler);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 
 	@Override

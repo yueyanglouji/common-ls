@@ -7,7 +7,7 @@ public class ThreadLocalContext extends Context implements Serializable{
 	private static final ThreadLocal<ThreadLocalContext> context = new ThreadLocal<>();
 
 	private ThreadLocalContext(){
-		super(null);
+		super();
 	}
 	
 	public static ThreadLocalContext getContext() {
@@ -16,4 +16,8 @@ public class ThreadLocalContext extends Context implements Serializable{
 		}
         return context.get();
     }
+
+	public static void remove() {
+		context.remove();
+	}
 }

@@ -17,6 +17,7 @@ import org.apache.hc.core5.http.nio.support.BasicRequestProducer;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 
 public class Http2Connector extends HttpConnector {
@@ -31,6 +32,8 @@ public class Http2Connector extends HttpConnector {
 		connect.client = client;
 		
 		connect.connectTimeout = client.getConnectTimeout();
+
+		connect.responseTimeout = client.getResponseTimeout();
 
 		connect.httpVersion = client.getHttpVersion();
 		
@@ -68,7 +71,7 @@ public class Http2Connector extends HttpConnector {
 	
 	public<T> T get(AsyncResponseConsumer<T> consumer) throws Exception{
 		Future<T> f = getAsync(consumer);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 	
 	public<T> Future<T> postAsync(AsyncResponseConsumer<T> consumer) throws Exception{
@@ -82,7 +85,7 @@ public class Http2Connector extends HttpConnector {
 	
 	public<T> T post(AsyncResponseConsumer<T> consumer) throws Exception{
 		Future<T> f = postAsync(consumer);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 	
 	public<T> Future<T> putAsync(AsyncResponseConsumer<T> consumer) throws Exception{
@@ -96,7 +99,7 @@ public class Http2Connector extends HttpConnector {
 	
 	public<T> T put(AsyncResponseConsumer<T> consumer) throws Exception{
 		Future<T> f = putAsync(consumer);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 	
 	public<T> Future<T> deleteAsync(AsyncResponseConsumer<T> consumer) throws Exception{
@@ -110,7 +113,7 @@ public class Http2Connector extends HttpConnector {
 	
 	public<T> T delete(AsyncResponseConsumer<T> consumer) throws Exception{
 		Future<T> f = deleteAsync(consumer);
-		return f.get();
+		return f.get(getTimeoutSeconds(), TimeUnit.SECONDS);
 	}
 
 	@Override
