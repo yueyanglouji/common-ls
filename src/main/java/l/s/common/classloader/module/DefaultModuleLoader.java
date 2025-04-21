@@ -16,8 +16,4 @@ public class DefaultModuleLoader extends ModuleLoader {
     public boolean unloadModule(final String moduleId, final Module module) throws SecurityException {
         return JbossAccessor.unloadModule(module.getModuleLoader(), moduleId, module);
     }
-
-    public void close(){
-        finder.close();
-    }
 }

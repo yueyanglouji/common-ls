@@ -5,7 +5,6 @@ import l.s.common.vfs.VirtualFile;
 import org.jboss.modules.AbstractResourceLoader;
 import org.jboss.modules.ClassSpec;
 import org.jboss.modules.IterableResourceLoader;
-import org.jboss.modules.NativeLibraryResourceLoader;
 import org.jboss.modules.PackageSpec;
 import org.jboss.modules.PathUtils;
 import org.jboss.modules.Resource;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 
 public class VirtualFileResourceLoader extends AbstractResourceLoader implements IterableResourceLoader {
 
@@ -199,21 +197,18 @@ public class VirtualFileResourceLoader extends AbstractResourceLoader implements
     @Override
     public Collection<String> getPaths() {
         try {
-            return doPrivilegedIfNeeded(context, IOException.class, () -> {
-                    return root.mount().walk()
-                    .map(dir -> {
-                        final String result = dir.getPathRelativeTo(root);
-                        final String canonical = PathUtils.toGenericSeparators(result);
+            List<String> list = new ArrayList<>();
+            root.mount().walk(vf -> {
+                final String result = vf.getPathRelativeTo(root);
+                String canonical = PathUtils.toGenericSeparators(result);
 
-                        // JBoss modules expect folders not to end with a slash, so we have to strip it.
-                        if (canonical.endsWith("/")) {
-                            return canonical.substring(0, canonical.length() - 1);
-                        } else {
-                            return canonical;
-                        }
-                    })
-                    .collect(Collectors.toList());
+                // JBoss modules expect folders not to end with a slash, so we have to strip it.
+                if (canonical.endsWith("/")) {
+                    canonical = canonical.substring(0, canonical.length() - 1);
+                }
+                list.add(canonical);
             });
+            return list;
         } catch (IOException e) {
             return Collections.emptyList();
         }

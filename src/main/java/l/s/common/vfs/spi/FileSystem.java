@@ -1,26 +1,8 @@
-/*
- * JBoss, Home of Professional Open Source
- * Copyright 2009, JBoss Inc., and individual contributors as indicated
- * by the @authors tag.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package l.s.common.vfs.spi;
 
 import l.s.common.vfs.VirtualFile;
+import l.s.common.vfs.WalkFunction;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,14 +11,6 @@ import java.net.URISyntaxException;
 import java.security.CodeSigner;
 import java.util.List;
 
-/**
- * A file system which is mounted in to the VFS.  This is the driver class for a given virtual file system type.  An
- * instance of {@code FileSystem} will be mounted at some point on a VFS.  The specific instance is only called when a
- * file from this filesystem is called upon.  The path components passed in to the operations are canonical, with no "."
- * or ".." components.
- *
- * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
- */
 public interface FileSystem {
 
     /**
@@ -126,6 +100,8 @@ public interface FileSystem {
      * @return the collection of children names
      */
     List<String> getDirectoryEntries(VirtualFile target);
+
+    void walk(VirtualFile virtualFile, WalkFunction function);
 
     List<VirtualFile> walkToList(VirtualFile target) throws IOException;
 

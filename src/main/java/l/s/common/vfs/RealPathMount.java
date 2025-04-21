@@ -3,7 +3,6 @@ package l.s.common.vfs;
 import l.s.common.vfs.spi.FileSystem;
 import l.s.common.vfs.spi.RealFileSystem;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,7 +10,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,7 +25,7 @@ public class RealPathMount extends Mount{
     public RealPathMount(TempFileProvider tempFileProvider, VirtualFile virtualFile, VirtualFileType type, Path realPath) {
         super(tempFileProvider, virtualFile, type);
         this.realPath = realPath;
-        this.mountPoint = virtualFile.getRoot().get();
+        this.mountPoint = virtualFile.getRoot().getVirtualFile();
         this.realFileSystem = new RealFileSystem(virtualFile.getRoot().mountPath.toFile());
     }
 
@@ -37,14 +35,8 @@ public class RealPathMount extends Mount{
 
     @Override
     public List<VirtualFile> listFiles() {
-        try (Stream<Path> list = Files.list(realPath)) {
-            return list.map(p -> {
-                        return virtualFile.get(p.getFileName().toString());
-                    })
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to list files in " + realPath, e);
-        }
+        List<String> directoryEntries = getFileSystem().getDirectoryEntries(virtualFile);
+        return directoryEntries.stream().map(x -> virtualFile.get(x)).collect(Collectors.toList());
     }
 
     @Override

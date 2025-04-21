@@ -52,11 +52,15 @@ public abstract class Mount {
 
     public abstract URI toURI() throws URISyntaxException;
 
-    public Stream<VirtualFile> walk() throws IOException {
-        return walkToList().stream();
+    public void walk(WalkFunction function) throws IOException {
+        getFileSystem().walk(virtualFile, function);
     }
 
     public List<VirtualFile> walkToList() throws IOException {
         return getFileSystem().walkToList(virtualFile);
+    }
+
+    public Mount reMount() throws IOException {
+        return virtualFile.mount();
     }
 }

@@ -4,7 +4,6 @@ import groovy.lang.GroovyClassLoader;
 import org.jboss.modules.ModuleClassLoader;
 
 import java.net.URL;
-import java.net.URLClassLoader;
 
 public class GroovyModuleClassLoader extends GroovyClassLoader {
 

@@ -16,7 +16,6 @@ import org.jboss.modules.filter.PathFilters;
 import java.io.IOException;
 import java.security.AccessControlContext;
 import java.security.AccessController;
-import java.util.ArrayList;
 import java.util.List;
 
 import static l.s.common.classloader.module.JbossAccessor.MODULES_DIR;
@@ -29,11 +28,7 @@ public class DefaultModuleFinder implements ModuleFinder {
 
     VirtualFile[] jarDir;
 
-    VirtualFile[] classesDir;
-
-    VirtualFile workDir;
-
-    List<ResourceLoader> resourceLoaderList = new ArrayList<>();
+    VirtualFile[] classPaths;
 
     private static final PathFilter NO_MODULES_DIR;
 
@@ -44,12 +39,15 @@ public class DefaultModuleFinder implements ModuleFinder {
         NO_MODULES_DIR = builder.create();
     }
 
-    public DefaultModuleFinder(ModuleLoader baseModuleLoader, VirtualFile workDir, VirtualFile[] jarDir, VirtualFile[] classesDir){
+    public DefaultModuleFinder(ModuleLoader baseModuleLoader, VirtualFile[] classPaths){
+        this(baseModuleLoader, new VirtualFile[]{}, classPaths);
+    }
+
+    public DefaultModuleFinder(ModuleLoader baseModuleLoader, VirtualFile[] jarDir, VirtualFile[] classPaths){
         this.baseModuleLoader = baseModuleLoader;
         this.context = AccessController.getContext();
         this.jarDir = jarDir;
-        this.classesDir = classesDir;
-        this.workDir = workDir;
+        this.classPaths = classPaths;
     }
 
     @Override
@@ -57,15 +55,19 @@ public class DefaultModuleFinder implements ModuleFinder {
         //VirtualFile war = workDir.get(name);
         final ModuleSpec.Builder builder = ModuleSpec.build(name);
 
-        for(VirtualFile it : classesDir){
-            dependencyClasses(it, builder);
-        }
-        try {
-            for (VirtualFile it : jarDir) {
-                dependencyLibJars(it, builder);
+        if(classPaths != null){
+            for(VirtualFile it : classPaths){
+                dependencyClassPath(it, builder);
             }
-        } catch (IOException e) {
-            throw new ModuleLoadException(e);
+        }
+        if(jarDir != null){
+            try {
+                for (VirtualFile it : jarDir) {
+                    dependencyLibJars(it, builder);
+                }
+            } catch (IOException e) {
+                throw new ModuleLoadException(e);
+            }
         }
         addCommonDependencies(builder);
         addSelfDependency(builder);
@@ -86,7 +88,7 @@ public class DefaultModuleFinder implements ModuleFinder {
                 .build());
     }
 
-    private void dependencyClasses(VirtualFile path, ModuleSpec.Builder builder) {
+    private void dependencyClassPath(VirtualFile path, ModuleSpec.Builder builder) {
         ResourceLoader resourceLoader = new VirtualFileResourceLoader(path.toString(), path, context);
         try {
             //builder.addResourceRoot(ResourceLoaderSpec.createResourceLoaderSpec(resourceLoader, NO_MODULES_DIR));
@@ -113,7 +115,6 @@ public class DefaultModuleFinder implements ModuleFinder {
                 try {
                     //builder.addResourceRoot(ResourceLoaderSpec.createResourceLoaderSpec(resourceLoader, NO_MODULES_DIR));
                     addSelfContent(builder, resourceLoader);
-                    this.resourceLoaderList.add(resourceLoader);
                 } catch (Throwable t) {
                     resourceLoader.close();
                     throw t;
@@ -128,9 +129,5 @@ public class DefaultModuleFinder implements ModuleFinder {
                 .setLocalLoader(JbossAccessor.SYSTEM)
                 .setLoaderPaths(LocalModuleParser.COMMON)
                 .build());
-    }
-
-    public void close(){
-        resourceLoaderList.forEach(ResourceLoader::close);
     }
 }

@@ -1,25 +1,7 @@
-/*
-* JBoss, Home of Professional Open Source
-* Copyright 2006, JBoss Inc., and individual contributors as indicated
-* by the @authors tag.
-*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
 package l.s.common.vfs.protocol;
 
 import l.s.common.vfs.Mount;
 import l.s.common.vfs.VFS;
-import l.s.common.vfs.VFSUtils;
 import l.s.common.vfs.VirtualFile;
 
 import java.io.File;
@@ -29,13 +11,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.Permission;
 
-/**
- * Implements basic URLConnection for a VirtualFile
- *
- * @author <a href="bill@jboss.com">Bill Burke</a>
- * @author <a href="ales.justin@jboss.com">Ales Justin</a>
- * @version $Revision: 1.1 $
- */
 class VirtualFileURLConnection extends AbstractURLConnection {
     static final String JAR_CONTENT_TYPE = "application/java-archive";
 
@@ -43,7 +18,7 @@ class VirtualFileURLConnection extends AbstractURLConnection {
 
     VirtualFileURLConnection(URL url) throws IOException {
         super(url);
-        file = VFS.getRoot().get(toURI(url));
+        file = VFS.getVirtualFile(toURI(url));
     }
 
     public void connect() throws IOException {

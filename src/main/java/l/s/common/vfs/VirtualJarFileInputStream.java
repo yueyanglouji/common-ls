@@ -1,20 +1,3 @@
-/*
- * JBoss, Home of Professional Open Source
- * Copyright 2009, JBoss Inc., and individual contributors as indicated
- * by the @authors tag.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package l.s.common.vfs;
 
 import l.s.common.util.IoUtil;
@@ -27,12 +10,6 @@ import java.util.jar.JarEntry;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 
-/**
- * An input stream that can be used to wrap an VirtualJarInputStream (so any VFS dir)
- * and produce a byte stream following the Zip standard.
- *
- * @author <a href="mailto:jbailey@redhat.com">John Bailey</a>
- */
 public class VirtualJarFileInputStream extends InputStream {
     // Needs to be sufficiently sized to allow local and central file headers with a single entry name
     private static final int MINIMUM_BUFFER_LENGTH = 1024;

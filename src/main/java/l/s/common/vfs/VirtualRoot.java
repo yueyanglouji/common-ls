@@ -13,27 +13,25 @@ public class VirtualRoot {
 
     Path mountPath;
 
-    boolean closed;
-
     VirtualRoot(VirtualFile root, Path mountPath){
         this.root = root;
         this.mountPath = mountPath;
     }
 
-    public VirtualFile get(){
+    public VirtualFile getVirtualFile(){
         return root;
     }
 
-    public VirtualFile get(URL url) throws IOException, URISyntaxException {
-        return get(url.toURI());
+    public VirtualFile getVirtualFile(URL url) throws IOException, URISyntaxException {
+        return getVirtualFile(url.toURI());
     }
 
-    public VirtualFile get(URI uri) throws IOException {
+    public VirtualFile getVirtualFile(URI uri) throws IOException {
         String path = uri.getPath();
         if(path == null) {
             path = uri.getSchemeSpecificPart();
         }
-        URI fileURI = null;
+        URI fileURI;
         try {
             fileURI = new URI("file", path, null);
         } catch (URISyntaxException e) {
@@ -42,10 +40,5 @@ public class VirtualRoot {
         String relative = mountPath.relativize(Paths.get(fileURI).normalize()).normalize().toString();
         return root.get(relative);
     }
-
-    public boolean isClosed(){
-        return closed;
-    }
-
 
 }

@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +53,22 @@ public class VirtualFile {
         return virtualRoot;
     }
 
+    public void linkTo(Path path) throws IOException {
+        try{
+            VFS.addSoftLink(this, path);
+            this.mount().reMount();
+        } catch (Exception e){
+            unlink();
+            throw e;
+        }
+
+    }
+
+    public void unlink() throws IOException {
+        VFS.removeSoftLink(this);
+        this.mount().reMount();
+    }
+
     public Mount mount() throws IOException {
         return makeMount(this);
     }
@@ -61,10 +78,15 @@ public class VirtualFile {
         return (T)mount();
     }
 
-    private static Mount makeMount(Path path, List<String> entryList, VirtualFile vf) throws IOException {
+    private static Mount makeMount(Path path, List<String> entryList, VirtualFile vf, VirtualFile mountPoint) throws IOException {
         VirtualFileType type;
         Mount ret;
-        if(!Files.exists(path)){
+        Path softLink = VFS.getSoftLink(vf);
+        // softLink not null and softlink is not same path and not in zip.
+        if(softLink != null && !softLink.equals(path) && entryList.size() <= 1){
+            ret = makeMount(softLink, entryList, vf, mountPoint);
+        }
+        else if(!Files.exists(path)){
             type = VirtualFileType.NOT_EXISTS;
             ret = new RealPathMount(tempFileProvider, vf, type, path);
         }
@@ -76,7 +98,7 @@ public class VirtualFile {
             File file = path.toFile();
             if(isJavaZipFile(file)){
                 type = VirtualFileType.JAVA_ZIP;
-                ret = new JavaZipMount(tempFileProvider, vf, type, path, Collections.unmodifiableList(entryList));
+                ret = new JavaZipMount(tempFileProvider, vf, type, mountPoint, path);
             }else {
                 type = VirtualFileType.FILE;
                 ret = new RealPathMount(tempFileProvider, vf, type, path);
@@ -84,7 +106,7 @@ public class VirtualFile {
         }
         else if(Files.isSymbolicLink(path)) {
             Path linked = Files.readSymbolicLink(path);
-            Mount realMount = makeMount(linked, entryList, vf);
+            Mount realMount = makeMount(linked, entryList, vf, mountPoint);
             if(realMount instanceof SymbolicLinkJavaZipMount){
                 SymbolicLinkJavaZipMount realMount0 = (SymbolicLinkJavaZipMount) realMount;
                 realMount0.symbolicLinkPath = vf.mountPath;
@@ -95,7 +117,7 @@ public class VirtualFile {
             }
             else if(realMount instanceof JavaZipMount){
                 JavaZipMount realMount0 = (JavaZipMount) realMount;
-                SymbolicLinkJavaZipMount realRealMount = new SymbolicLinkJavaZipMount(tempFileProvider, vf, realMount0.type, realMount0.getZipFile(), realMount0.entryList, path);
+                SymbolicLinkJavaZipMount realRealMount = new SymbolicLinkJavaZipMount(tempFileProvider, vf, realMount0.type, realMount0.mountPoint, realMount0.getZipFile(), path);
                 realRealMount.symbolicLinkPath = vf.mountPath;
                 realMount = realRealMount;
             }
@@ -135,7 +157,7 @@ public class VirtualFile {
         Mount mount = null;
         for(VirtualFile vf : list){
             if(mount == null){
-                mount = makeMount(vf.mountPath, entryList, vf);
+                mount = makeMount(vf.mountPath, entryList, vf, vf);
                 continue;
             }
             if(mount.type == VirtualFileType.FILE){
@@ -143,16 +165,16 @@ public class VirtualFile {
             }
             else if(mount.type == VirtualFileType.DIRECTORY){
                 RealPathMount mount0 = (RealPathMount) mount;
-                mount = makeMount(vf.mountPath, entryList, vf);
+                mount = makeMount(vf.mountPath, entryList, vf, vf);
             }
             else if(mount.type == VirtualFileType.JAVA_ZIP){
                 JavaZipMount mount0 = (JavaZipMount) mount;
                 entryList.add(vf.name);
-                mount = makeMount(mount0.getZipFile(), entryList, vf);
+                mount = makeMount(mount0.getZipFile(), entryList, vf, mount0.mountPoint);
             }
             else if(mount.type == VirtualFileType.NOT_EXISTS){
                 RealPathMount mount0 = (RealPathMount) mount;
-                mount = makeMount(vf.mountPath, entryList, vf);
+                mount = makeMount(vf.mountPath, entryList, vf, vf);
             }
             else{
                 throw new RuntimeException("type not support : " + mount.type);
@@ -161,12 +183,15 @@ public class VirtualFile {
         return mount;
     }
 
-    private static boolean isJavaZipFile(File f) {
+    static boolean isJavaZipFile(File f) {
         // TODO: only for .jar and .war files, but we need to check if has any other file types should be checked?
         return f.getName().endsWith(".jar") || f.getName().endsWith(".war") && isArchive(f);
     }
 
     private static boolean isArchive(File f) {
+        if(!f.isFile()){
+            return false;
+        }
         int fileSignature = 0;
         try (RandomAccessFile raf = new RandomAccessFile(f, "r")) {
             fileSignature = raf.readInt();
@@ -194,7 +219,7 @@ public class VirtualFile {
                 final VirtualFile parent = current.parent;
                 current = parent == null ? current : parent;
             } else if (!PathTokenizer.isCurrentToken(part)) {
-                current = new VirtualFile(root, current, part, (current.path.endsWith("/")? "" : current.path) + "/" + part, current.mountPath.resolve(part));
+                current = new VirtualFile(root, current, part, (current.path.endsWith("/")? "" : current.path) + "/" + part, Paths.get(current.mountPath.toString(), part));
             }
         }
         return current;
@@ -221,6 +246,24 @@ public class VirtualFile {
         return path;
     }
 
+    @Override
+    public int hashCode() {
+        return (root + "" + parent + name + path + mountPath).hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof VirtualFile)){
+            return false;
+        }
+        VirtualFile vf = (VirtualFile) obj;
+        return hashCode() == vf.hashCode()
+                && root == vf.root
+                && name.equals(vf.name)
+                && path.equals(vf.path)
+                && mountPath.equals(vf.mountPath);
+    }
+
     public String getPathRelativeTo(VirtualFile root) {
         String rootPath = root.path;
         if(rootPath.equals(path)){
@@ -237,7 +280,7 @@ public class VirtualFile {
     }
 
     public boolean isRoot() {
-        return this.root.get() == this;
+        return this.root.getVirtualFile() == this;
     }
 
     public Path getMountPath() {

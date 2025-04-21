@@ -1,14 +1,14 @@
 # use this project
 gradle:
 ```java
-implementation("com.woyouyigegushi.common-ls:common-ls:1.0.5")
+implementation("com.woyouyigegushi.common-ls:common-ls:1.0.7")
 ```
 maven:
 ```java
 <dependency>
     <groupId>com.woyouyigegushi.common-ls</groupId>
     <artifactId>common-ls</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.7</version>
 </dependency>
 
 ```

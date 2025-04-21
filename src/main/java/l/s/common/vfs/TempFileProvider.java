@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +24,7 @@ public final class TempFileProvider implements Closeable {
         String configTmpDir = System.getProperty(LS_TMP_DIR_PROPERTY);
         if (configTmpDir == null) { configTmpDir = System.getProperty(JVM_TMP_DIR_PROPERTY); }
         try {
-            TMP_ROOT = new File(configTmpDir, "lsvfs");
+            TMP_ROOT = new File(configTmpDir, VFSUtils.VFS_PROTOCOL);
             TMP_ROOT.mkdirs();
         } catch (Exception e) {
             throw e;
@@ -41,7 +40,7 @@ public final class TempFileProvider implements Closeable {
      * @throws IOException if an I/O error occurs
      */
     public static TempFileProvider create(String providerType) throws IOException {
-        return create(providerType, false);
+        return create(providerType, true);
     }
 
     /**

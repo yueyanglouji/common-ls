@@ -3,6 +3,7 @@ package l.s.common.vfs.spi;
 import l.s.common.vfs.TempDir;
 import l.s.common.vfs.VFSUtils;
 import l.s.common.vfs.VirtualFile;
+import l.s.common.vfs.WalkFunction;
 import l.s.common.vfs.util.PathTokenizer;
 
 import java.io.BufferedOutputStream;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.CodeSigner;
 import java.util.ArrayList;
@@ -41,6 +43,10 @@ public final class JavaZipFileSystem implements FileSystem {
 
     static {
         ZIP_NODE_CACHE = new ConcurrentHashMap<>();
+    }
+
+    public static void clearCache(File archiveFile) {
+        ZIP_NODE_CACHE.remove(archiveFile.getAbsolutePath());
     }
 
     /**
@@ -81,13 +87,16 @@ public final class JavaZipFileSystem implements FileSystem {
             JarFile zipFile = new JarFile(archiveFile)
         ){
             final Enumeration<? extends JarEntry> entries = zipFile.entries();
-            final ZipNode rootNode = new ZipNode(new HashMap<String, ZipNode>(), "", null);
+            final ZipNode rootNode = new ZipNode(new HashMap<String, ZipNode>(), "", null, "", null, null);
+            rootNode.makeSoftLinkZipNode(rootNode, zipVirtualFile);
+
             FILES:
             for (JarEntry entry : iter(entries)) {
                 final String entryName = entry.getName();
                 final boolean isDirectory = entry.isDirectory();
                 final List<String> tokens = PathTokenizer.getTokens(entryName);
                 ZipNode node = rootNode;
+                VirtualFile vf = zipVirtualFile;
                 final Iterator<String> it = tokens.iterator();
                 while (it.hasNext()) {
                     String token = it.next();
@@ -101,11 +110,14 @@ public final class JavaZipFileSystem implements FileSystem {
                         continue FILES;
                     }
                     ZipNode child = children.get(token);
+                    VirtualFile childVf = vf.get(token);
                     if (child == null) {
-                        child = it.hasNext() || isDirectory ? new ZipNode(new HashMap<String, ZipNode>(), token, null) : new ZipNode(null, token, entryName);
+                        rootNode.makeSoftLinkZipNode(node, vf);
+                        child = it.hasNext() || isDirectory ? new ZipNode(new HashMap<String, ZipNode>(), token, null, entryName, null, null) : new ZipNode(null, token, entryName, entryName, null, null);
                         children.put(token, child);
                     }
                     node = child;
+                    vf = childVf;
                 }
             }
             ZIP_NODE_CACHE.put(fileKey, rootNode);
@@ -273,7 +285,7 @@ public final class JavaZipFileSystem implements FileSystem {
         if (zipNode == null) {
             return Collections.emptyList();
         }
-        final Map<String, ZipNode> children = zipNode.children;
+        final Map<String, ZipNode> children = zipNode.getChildren();
         if (children == null) {
             return Collections.emptyList();
         }
@@ -283,6 +295,28 @@ public final class JavaZipFileSystem implements FileSystem {
             names.add(node.name);
         }
         return names;
+    }
+
+    @Override
+    public void walk(VirtualFile target, WalkFunction function) {
+        final ZipNode zipNode = rootNode.find(zipVirtualFile, target);
+        if (zipNode == null) {
+            return;
+        }
+        walk(zipNode, target, function);
+    }
+
+    private void walk(ZipNode node, VirtualFile target, WalkFunction function) {
+        final Map<String, ZipNode> children = node.getChildren();
+        if (children == null) {
+            return;
+        }
+        final Collection<ZipNode> values = children.values();
+        for(ZipNode child : values) {
+            VirtualFile vf = target.get(child.name);
+            function.apply(vf);
+            walk(child, vf, function);
+        }
     }
 
     @Override
@@ -297,7 +331,7 @@ public final class JavaZipFileSystem implements FileSystem {
     }
 
     private void walkToList(ZipNode node, VirtualFile target, List<VirtualFile> list) throws IOException {
-        final Map<String, ZipNode> children = node.children;
+        final Map<String, ZipNode> children = node.getChildren();
         if (children == null) {
             return;
         }
@@ -373,18 +407,34 @@ public final class JavaZipFileSystem implements FileSystem {
         return currentFile;
     }
 
+    public VirtualFile getExistsParent(VirtualFile target) {
+        if(exists(target)){
+           return target;
+        }else{
+            return getExistsParent(target.getParent());
+        }
+    }
+
     private static final class ZipNode {
 
         // immutable child map
         private final Map<String, ZipNode> children;
         private final String name;
         private final String entry;
+        // Not empty
+        private final String entryPath;
         private volatile File cachedFile;
+        private Path softLink;
+        private VirtualFile softLinkVirtualFile;
+        private boolean linked = false;
 
-        private ZipNode(Map<String, ZipNode> children, String name, String entry) {
+        private ZipNode(Map<String, ZipNode> children, String name, String entry, String entryPath, Path softLink, VirtualFile softLinkVirtualFile) {
             this.children = children;
             this.name = name;
             this.entry = entry;
+            this.entryPath = entryPath;
+            this.softLink = softLink;
+            this.softLinkVirtualFile = softLinkVirtualFile;
         }
 
         private ZipNode find(VirtualFile zip, VirtualFile target) {
@@ -395,12 +445,83 @@ public final class JavaZipFileSystem implements FileSystem {
                 if (parent == null) {
                     return null;
                 }
-                final Map<String, ZipNode> children = parent.children;
+                final Map<String, ZipNode> children = parent.getChildren();
                 if (children == null) {
                     return null;
                 }
-                return children.get(target.getName());
+                ZipNode zipNode = children.get(target.getName());
+                if (zipNode != null) {
+                    if(zipNode.softLinkVirtualFile != null){
+                        try {
+                            makeSoftLinkZipNode(zipNode, zipNode.softLinkVirtualFile);
+                        } catch (Exception e){
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                return zipNode;
             }
+        }
+
+        public Map<String, ZipNode> getChildren() {
+            if(this.softLinkVirtualFile != null){
+                try {
+                    makeSoftLinkZipNode(this, this.softLinkVirtualFile);
+                } catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }
+            return this.children;
+        }
+
+        private void makeSoftLinkZipNode(ZipNode parent, VirtualFile parentVirtualFile) throws IOException {
+            if(!parent.linked){
+                synchronized (parent){
+                    if(!parent.linked){
+                        if(parent.softLinkVirtualFile != null){
+                            File[] files = parent.softLink.toFile().listFiles();
+                            if (files != null) {
+                                for (File p : files) {
+                                    String softLinkChild = p.getName();
+                                    VirtualFile vf = parent.softLinkVirtualFile.get(softLinkChild);
+                                    if(VFSUtils.getSoftLink(vf) == null){
+                                        makeSoftLinkZipNode(parent, vf, p.toPath());
+                                    }
+                                }
+                            }
+                        }
+
+                        List<String> softLinkChildren = VFSUtils.getSoftLinkChildren(parentVirtualFile);
+                        for (String softLinkChild : softLinkChildren) {
+                            VirtualFile vf = parentVirtualFile.get(softLinkChild);
+                            Path softLink = VFSUtils.getSoftLink(vf);
+                            makeSoftLinkZipNode(parent, vf, softLink);
+                        }
+                        parent.linked = true;
+                    }
+                }
+            }
+        }
+        private void makeSoftLinkZipNode(ZipNode parent, VirtualFile virtualFile, Path path) throws IOException {
+            if(Files.isSymbolicLink(path)){
+                path = Files.readSymbolicLink(path);
+                makeSoftLinkZipNode(parent, virtualFile, path);
+                return;
+            }
+            String childEntry;
+            if(parent.entryPath == null || parent.entryPath.isEmpty()){
+                childEntry = virtualFile.getName();
+            }else{
+                childEntry = parent.entryPath + "/" + virtualFile.getName();
+            }
+            ZipNode softLinkNode;
+            if(Files.isDirectory(path)){
+                softLinkNode = new ZipNode(new HashMap<String, ZipNode>(), virtualFile.getName(), null, childEntry, path, virtualFile);
+            }else {
+                softLinkNode = new ZipNode(new HashMap<String, ZipNode>(), virtualFile.getName(), childEntry, childEntry, path, virtualFile);
+                softLinkNode.cachedFile = path.toFile();
+            }
+            parent.children.put(virtualFile.getName(), softLinkNode);
         }
     }
 }

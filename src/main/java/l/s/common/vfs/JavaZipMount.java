@@ -3,6 +3,7 @@ package l.s.common.vfs;
 import l.s.common.vfs.spi.FileSystem;
 import l.s.common.vfs.spi.JavaZipFileSystem;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,8 +11,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JavaZipMount extends Mount{
 
@@ -19,55 +20,63 @@ public class JavaZipMount extends Mount{
 
     VirtualFile mountPoint;
 
-    List<String> entryList;
-
     JavaZipFileSystem javaZipFileSystem;
 
-    public JavaZipMount(TempFileProvider tempFileProvider, VirtualFile virtualFile, VirtualFileType type, Path zipFile, List<String> entryList) throws IOException {
+    public JavaZipMount(TempFileProvider tempFileProvider, VirtualFile virtualFile, VirtualFileType type, VirtualFile mountPoint, Path zipFile) throws IOException {
         super(tempFileProvider, virtualFile, type);
+        init(tempFileProvider, virtualFile, type, mountPoint, zipFile);
+    }
+
+    private void init(TempFileProvider tempFileProvider, VirtualFile virtualFile, VirtualFileType type, VirtualFile mountPoint, Path zipFile) throws IOException {
         this.zipFile = zipFile;
-        if(entryList == null || entryList.isEmpty()){
-            this.entryList = Collections.singletonList("/");
-        }
-        mountPoint = getMountPoint(virtualFile);
-        if(mountPoint == null){
+        this.mountPoint = mountPoint;
+        if(this.mountPoint == null){
             throw new IOException("Zip file mount point is not found.");
         }
         javaZipFileSystem = new JavaZipFileSystem(zipFile, tempFileProvider.createOrGetTempDir(zipFile), mountPoint);
-    }
-
-    protected VirtualFile getMountPoint(VirtualFile virtualFile) {
-        if(virtualFile.getMountPath().equals(zipFile)){
-            return virtualFile;
-        }else{
-            if(virtualFile.isRoot()){
-                return null;
+        if(virtualFile.equals(mountPoint)){
+            return;
+        }
+        if(!javaZipFileSystem.exists(virtualFile)){
+            VirtualFile internalMountPoint = javaZipFileSystem.getExistsParent(virtualFile);
+            if(mountPoint.equals(internalMountPoint)){
+                return;
             }
-            return getMountPoint(virtualFile.getParent());
+            File maybeInternalZipFile = mountPoint.mount().getFileSystem().getFile(internalMountPoint);
+            if(VirtualFile.isJavaZipFile(maybeInternalZipFile)){
+                init(tempFileProvider, virtualFile, type, internalMountPoint, maybeInternalZipFile.toPath());
+            }
+        }else{
+            File maybeInternalZipFile = mountPoint.mount().getFileSystem().getFile(virtualFile);
+            if(VirtualFile.isJavaZipFile(maybeInternalZipFile)){
+                init(tempFileProvider, virtualFile, type, virtualFile, maybeInternalZipFile.toPath());
+            }
         }
     }
 
+    public Mount reMount() throws IOException {
+        JavaZipFileSystem.clearCache(zipFile.toFile());
+        return super.reMount();
+    }
 
     public Path getZipFile() {
-        return mountPoint.getMountPath();
+        return zipFile;
     }
 
     public VirtualFile getMountPoint() {
         return mountPoint;
     }
 
-    public List<String> getEntryList() {
-        return entryList;
-    }
-
     @Override
     public List<VirtualFile> listFiles() {
-        return Collections.emptyList();
+        List<String> directoryEntries = getFileSystem().getDirectoryEntries(virtualFile);
+        return directoryEntries.stream().map(x -> virtualFile.get(x)).collect(Collectors.toList());
     }
 
     @Override
     public List<VirtualFile> listFiles(VirtualFileFilter filter) {
-        return Collections.emptyList();
+        List<String> directoryEntries = getFileSystem().getDirectoryEntries(virtualFile);
+        return directoryEntries.stream().map(x -> virtualFile.get(x)).filter(filter::accepts).collect(Collectors.toList());
     }
 
     @Override
